@@ -1,0 +1,63 @@
+TaxonCode,Header,PreyCategory,PreyCategory_simple,FinalID,WY15Study_taxon_ID,Code
+295,Malacostraca,Amphipoda: Americorophium sp.,Americorophium,Americorophium sp.,2,AME
+293,Malacostraca,Amphipoda: undetermined,Amphipoda,Amphipoda,34,AMP
+1035,Malacostraca,Amphipoda: undetermined,Amphipoda,Unknown Gammarid,36,AMP
+1036,Malacostraca,Amphipoda: undetermined,Amphipoda,Unknown Corophiid,37,AMP
+1060,Malacostraca,Amphipoda: undetermined,Amphipoda,Caprellidae,61,AMP
+1006,Insecta,Diptera: Chironomidae,Chironomidae,Chironomidae (Larva),7,CHI
+1007,Insecta,Diptera: Chironomidae,Chironomidae,Chironomidae (Pupa),8,CHI
+1039,Malacostraca,Isopoda: Cirolanidae,Cirolanidae,Unknown Cirolanid #1,40,CIR
+1040,Malacostraca,Isopoda: Cirolanidae,Cirolanidae,Unknown Cirolanid #2,41,CIR
+189,Insecta,Hemiptera: Corixidae,Corixidae,Corixidae,14,COR
+1015,Insecta,Diptera,Diptera,Diptera,16,DIP
+1022,Insecta,Diptera,Diptera,Diptera (Larva),23,DIP
+1024,Insecta,Diptera,Diptera,Diptera (Pupa),25,DIP
+142,Insecta,Diptera,Diptera,Tabanidae (Larva),57,DIP
+143,Insecta,Diptera,Diptera,Tipulidae,60,DIP
+1061,Insecta,Diptera,Diptera,Syrphidae,62,DIP
+1038,Malacostraca,Decapoda: Emerita sp.,Emerita,Emerita sp.,39,EME
+1018,Actinopterygii,Actinopterygii,Actinopterygii,Gasterosteus aculeatus,19,FSH
+582,Actinopterygii,Actinopterygii,Actinopterygii,Eucyclogobius newberryi,20,FSH
+300,Malacostraca,Amphipoda: Eogammarus sp.,Eogammarus,Eogammarus sp.,1,GAM
+306,Malacostraca,Isopoda: Gnorimosphaeroma sp.,Gnorimosphaeroma,Gnorimosphaeroma sp.,3,GNO
+304,Malacostraca,Isopoda: undetermined,Isopoda,Isopoda,38,ISO
+1041,Malacostraca,Decapoda: Megalopa,Megalopae,Unknown Megalopae,42,MEG
+1003,Malacostraca,Mysidae: Neomysis mercedis,Neomysis,Neomysis mercedis,4,NEO
+1004,Other aquatics (non-insecta),Other aquatics (non-insecta),Other aquatics,Oligochaeta,5,OAN
+5,Other aquatics (non-insecta),Other aquatics (non-insecta),Other aquatics,Polychaeta,6,OAN
+1010,Other aquatics (non-insecta),Other aquatics (non-insecta),Other aquatics,Nematoda,11,OAN
+1020,Other aquatics (non-insecta),Other aquatics (non-insecta),Other aquatics,Assiminea sp.,21,OAN
+321,Other aquatics (non-insecta),Other aquatics (non-insecta),Other aquatics,Physidae,22,OAN
+307,Other aquatics (non-insecta),Other aquatics (non-insecta),Other aquatics,Ostracoda,26,OAN
+1026,Other aquatics (non-insecta),Other aquatics (non-insecta),Other aquatics,Copepoda,27,OAN
+1029,Other aquatics (non-insecta),Other aquatics (non-insecta),Other aquatics,Hirudinea (Leech),30,OAN
+1032,Other aquatics (non-insecta),Other aquatics (non-insecta),Other aquatics,Unkown aquatic,33,OAN
+1048,Other aquatics (non-insecta),Other aquatics (non-insecta),Other aquatics,Acari,49,OAN
+43,Insecta,Other insects,Other insects,Elmidae (Larva),9,OIA
+1009,Insecta,Other insects,Other insects,Elmidae (Adult),10,OIA
+215,Insecta,Other insects,Other insects,Gomphidae,12,OIA
+1014,Insecta,Other insects,Other insects,"Coleoptera (Larva, Aquatic)",15,OIA
+1023,Insecta,Other insects,Other insects,Ephemerellidae (Nymph),24,OIA
+1054,Insecta,Other insects,Other insects,Trichoptera (Larva),55,OIA
+1034,Malacostraca,Amphipoda: Megalorchestia,Megalorchestia,Megalorchestia spp.,35,ORC
+1046,Other terrestrials (Arachnida),Other terrestrials (Arachnida),Araneae,Arachnid (Terr),47,SPD
+1012,Insecta,Terrestrial insects,Terrestrial insects,"Coleoptera (Adult, Terr)",13,TER
+1016,Insecta,Terrestrial insects,Terrestrial insects,"Miridae (Adult, Terr)",17,TER
+1017,Insecta,Terrestrial insects,Terrestrial insects,Hymenoptera (Terr),18,TER
+1027,Insecta,Terrestrial insects,Terrestrial insects,"Pyralidae (Larva, Terr)",28,TER
+1028,Insecta,Terrestrial insects,Terrestrial insects,Orthoptera (Terr),29,TER
+1030,Insecta,Terrestrial insects,Terrestrial insects,Formicidae (Terr),31,TER
+1031,Insecta,Terrestrial insects,Terrestrial insects,Siphonaptera (Terr),32,TER
+1042,Insecta,Terrestrial insects,Terrestrial insects,Unknown terrestrial (Terr),43,TER
+1043,Insecta,Terrestrial insects,Terrestrial insects,"Chironomidae (Adult, Terr)",44,TER
+1044,Insecta,Terrestrial insects,Terrestrial insects,"Diptera (Adult, Terr)",45,TER
+1045,Insecta,Terrestrial insects,Terrestrial insects,Unknown insect (Terr),46,TER
+1047,Insecta,Terrestrial insects,Terrestrial insects,Aphidae (Terr),48,TER
+1049,Insecta,Terrestrial insects,Terrestrial insects,Psocodea (Terr),50,TER
+1050,Insecta,Terrestrial insects,Terrestrial insects,"Trichoptera (Adult, Terr)",51,TER
+1051,Insecta,Terrestrial insects,Terrestrial insects,"Plecoptera (Adult, Terr)",52,TER
+1052,Insecta,Terrestrial insects,Terrestrial insects,"Ephemeroptera (Adult, Terr)",53,TER
+1053,Insecta,Terrestrial insects,Terrestrial insects,"Lepidoptera (Adult, Terr)",54,TER
+1055,Insecta,Terrestrial insects,Terrestrial insects,"Curculionidae (Larva, Terr)",56,TER
+63,Insecta,Terrestrial insects,Terrestrial insects,"Staphylinidae (Larva, Terr)",58,TER
+1058,Insecta,Terrestrial insects,Terrestrial insects,"Curculionidae (Adult, Terr)",59,TER

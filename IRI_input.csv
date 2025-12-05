@@ -1,0 +1,157 @@
+Predator,Month,Species,PreyCategory,PercentOccurrence,PercentNumber,PercentMass
+Onki_Aug,Aug,Onki,Actinopterygii,50,8.73655914,25.63332618
+Onki_Aug,Aug,Onki,Amphipoda: Americorophium sp.,75,33.11827957,8.312613172
+Onki_Aug,Aug,Onki,Amphipoda: Eogammarus sp.,50,11.08870968,6.500342019
+Onki_Aug,Aug,Onki,Diptera: Chironomidae,25,0.403225806,0.007058903
+Onki_Aug,Aug,Onki,Isopoda: Gnorimosphaeroma sp.,75,40,57.39914414
+Onki_Aug,Aug,Onki,Mysidae: Neomysis mercedis,50,6.653225806,2.147515587
+Onmy_Aug,Aug,Onmy,Actinopterygii,17.85714286,1.518193776,4.089319542
+Onmy_Aug,Aug,Onmy,Amphipoda: Americorophium sp.,92.85714286,21.51212686,11.92663761
+Onmy_Aug,Aug,Onmy,Amphipoda: Eogammarus sp.,85.71428571,19.73484688,20.4508255
+Onmy_Aug,Aug,Onmy,Diptera,3.571428571,0.091575092,0.013897914
+Onmy_Aug,Aug,Onmy,Diptera: Chironomidae,17.85714286,0.774559638,0.099947001
+Onmy_Aug,Aug,Onmy,Hemiptera: Corixidae,7.142857143,0.153443965,0.076517265
+Onmy_Aug,Aug,Onmy,Isopoda: Gnorimosphaeroma sp.,96.42857143,54.73789204,62.32791626
+Onmy_Aug,Aug,Onmy,Mysidae: Neomysis mercedis,17.85714286,0.9505956,0.526233171
+Onmy_Aug,Aug,Onmy,Other aquatics (non-insecta),14.28571429,0.526766149,0.488705737
+Onki_Dec,Dec,Onki,Amphipoda: Americorophium sp.,100,89.79915871,41.01984246
+Onki_Dec,Dec,Onki,Amphipoda: Eogammarus sp.,57.14285714,1.656604411,14.51013585
+Onki_Dec,Dec,Onki,Amphipoda: Megalorchestia,57.14285714,0.308388846,5.023502437
+Onki_Dec,Dec,Onki,Amphipoda: undetermined,57.14285714,2.423720466,0.876510481
+Onki_Dec,Dec,Onki,Decapoda: Emerita sp.,100,0.726751259,16.37736733
+Onki_Dec,Dec,Onki,Decapoda: Megalopa,14.28571429,0.025195263,0.002591185
+Onki_Dec,Dec,Onki,Diptera,71.42857143,0.312339877,0.174056343
+Onki_Dec,Dec,Onki,Hemiptera: Corixidae,42.85714286,0.148031426,0.626845887
+Onki_Dec,Dec,Onki,Isopoda: Cirolanidae,85.71428571,4.322760484,20.12464716
+Onki_Dec,Dec,Onki,Isopoda: Gnorimosphaeroma sp.,28.57142857,0.068159895,0.581236472
+Onki_Dec,Dec,Onki,Isopoda: undetermined,14.28571429,0.02282063,0.043882444
+Onki_Dec,Dec,Onki,Mysidae: Neomysis mercedis,14.28571429,0.050390527,0.064723327
+Onki_Dec,Dec,Onki,Other aquatics (non-insecta),28.57142857,0.03955739,0.043780714
+Onki_Dec,Dec,Onki,Other terrestrials (Arachnida),14.28571429,0.02282063,0.130782595
+Onki_Dec,Dec,Onki,Terrestrial insects,28.57142857,0.073300186,0.400095315
+Onmy_Dec,Dec,Onmy,Actinopterygii,5.128205128,0.052561533,0.532827581
+Onmy_Dec,Dec,Onmy,Amphipoda: Americorophium sp.,92.30769231,62.12141466,31.68724134
+Onmy_Dec,Dec,Onmy,Amphipoda: Eogammarus sp.,69.23076923,5.104619639,6.648196529
+Onmy_Dec,Dec,Onmy,Amphipoda: Megalorchestia,82.05128205,17.44627028,27.9918226
+Onmy_Dec,Dec,Onmy,Amphipoda: undetermined,28.20512821,3.466646131,0.604007896
+Onmy_Dec,Dec,Onmy,Decapoda: Emerita sp.,43.58974359,0.841545501,7.73980405
+Onmy_Dec,Dec,Onmy,Diptera,43.58974359,0.695277389,0.627205232
+Onmy_Dec,Dec,Onmy,Diptera: Chironomidae,25.64102564,0.607507062,0.13083358
+Onmy_Dec,Dec,Onmy,Hemiptera: Corixidae,12.82051282,0.19469463,0.176440058
+Onmy_Dec,Dec,Onmy,Isopoda: Cirolanidae,43.58974359,1.847689694,4.358136951
+Onmy_Dec,Dec,Onmy,Isopoda: Gnorimosphaeroma sp.,82.05128205,5.319483301,13.46402247
+Onmy_Dec,Dec,Onmy,Mysidae: Neomysis mercedis,15.38461538,0.137510816,0.820190486
+Onmy_Dec,Dec,Onmy,Other aquatics (non-insecta),30.76923077,1.399057779,0.564075587
+Onmy_Dec,Dec,Onmy,Other insects,2.564102564,0.004383081,1.398607676
+Onmy_Dec,Dec,Onmy,Other terrestrials (Arachnida),2.564102564,0.051282051,0.185513406
+Onmy_Dec,Dec,Onmy,Terrestrial insects,25.64102564,0.710056452,3.071074553
+Onki_Jul,Jul,Onki,Actinopterygii,15.78947368,2.834066875,4.773584122
+Onki_Jul,Jul,Onki,Amphipoda: Americorophium sp.,89.47368421,26.69787415,9.72439346
+Onki_Jul,Jul,Onki,Amphipoda: Eogammarus sp.,94.73684211,28.65999153,38.20955429
+Onki_Jul,Jul,Onki,Diptera,5.263157895,0.37593985,0.027134068
+Onki_Jul,Jul,Onki,Diptera: Chironomidae,15.78947368,0.786780185,0.172747488
+Onki_Jul,Jul,Onki,Isopoda: Gnorimosphaeroma sp.,73.68421053,21.0917689,32.93467214
+Onki_Jul,Jul,Onki,Mysidae: Neomysis mercedis,57.89473684,9.666508515,4.094852061
+Onki_Jul,Jul,Onki,Other aquatics (non-insecta),5.263157895,0.190234623,0.062643242
+Onki_Jul,Jul,Onki,Other insects,10.52631579,0.183028766,0.260535009
+Onki_Jul,Jul,Onki,Terrestrial insects,26.31578947,9.513806605,9.739884122
+Onmy_Jul,Jul,Onmy,Actinopterygii,6.666666667,0.355774494,1.188865288
+Onmy_Jul,Jul,Onmy,Amphipoda: Americorophium sp.,86.66666667,9.628132515,2.913556037
+Onmy_Jul,Jul,Onmy,Amphipoda: Eogammarus sp.,86.66666667,20.41419655,25.34779494
+Onmy_Jul,Jul,Onmy,Diptera,3.333333333,0.095238095,0.003856845
+Onmy_Jul,Jul,Onmy,Diptera: Chironomidae,13.33333333,0.429604903,0.045046725
+Onmy_Jul,Jul,Onmy,Hemiptera: Corixidae,3.333333333,0.095238095,0.074045711
+Onmy_Jul,Jul,Onmy,Isopoda: Gnorimosphaeroma sp.,96.66666667,51.2250258,55.50843296
+Onmy_Jul,Jul,Onmy,Mysidae: Neomysis mercedis,43.33333333,14.39403551,10.9602528
+Onmy_Jul,Jul,Onmy,Other aquatics (non-insecta),20,2.518977926,2.626847297
+Onmy_Jul,Jul,Onmy,Other insects,3.333333333,0.526315789,0.535376209
+Onmy_Jul,Jul,Onmy,Terrestrial insects,3.333333333,0.317460317,0.795925187
+Onki_Jun,Jun,Onki,Amphipoda: Americorophium sp.,88.23529412,29.17052436,13.65124004
+Onki_Jun,Jun,Onki,Amphipoda: Eogammarus sp.,97.05882353,31.75747767,47.43131193
+Onki_Jun,Jun,Onki,Amphipoda: undetermined,2.941176471,0.065359477,0.035468058
+Onki_Jun,Jun,Onki,Diptera,17.64705882,0.939139355,0.051356578
+Onki_Jun,Jun,Onki,Diptera: Chironomidae,8.823529412,0.900904284,0.223103413
+Onki_Jun,Jun,Onki,Hemiptera: Corixidae,5.882352941,0.45751634,0.289135376
+Onki_Jun,Jun,Onki,Isopoda: Gnorimosphaeroma sp.,35.29411765,4.086504457,8.080339477
+Onki_Jun,Jun,Onki,Mysidae: Neomysis mercedis,70.58823529,17.82089716,21.23115098
+Onki_Jun,Jun,Onki,Other aquatics (non-insecta),8.823529412,3.291316527,0.534253739
+Onki_Jun,Jun,Onki,Other insects,20.58823529,2.780983385,0.529483558
+Onki_Jun,Jun,Onki,Other terrestrials (Arachnida),17.64705882,1.198717036,0.751827483
+Onki_Jun,Jun,Onki,Terrestrial insects,47.05882353,7.530659954,7.191329374
+Onmy_Jun,Jun,Onmy,Actinopterygii,2.127659574,0.019519813,0.38248886
+Onmy_Jun,Jun,Onmy,Amphipoda: Americorophium sp.,65.95744681,5.667567313,2.71888429
+Onmy_Jun,Jun,Onmy,Amphipoda: Eogammarus sp.,100,60.71681559,64.05133587
+Onmy_Jun,Jun,Onmy,Amphipoda: undetermined,2.127659574,0.064474533,0.008757917
+Onmy_Jun,Jun,Onmy,Diptera,2.127659574,0.043421624,0.006578936
+Onmy_Jun,Jun,Onmy,Isopoda: Gnorimosphaeroma sp.,72.34042553,16.82315598,18.55699082
+Onmy_Jun,Jun,Onmy,Mysidae: Neomysis mercedis,65.95744681,15.7243069,14.05189435
+Onmy_Jun,Jun,Onmy,Other aquatics (non-insecta),14.89361702,0.600921322,0.067441584
+Onmy_Jun,Jun,Onmy,Other insects,2.127659574,0.085106383,0.103342345
+Onmy_Jun,Jun,Onmy,Other terrestrials (Arachnida),2.127659574,0.033772374,0.004708705
+Onmy_Jun,Jun,Onmy,Terrestrial insects,6.382978723,0.220938163,0.04757632
+Onki_Nov,Nov,Onki,Actinopterygii,23.07692308,0.325369459,6.227487022
+Onki_Nov,Nov,Onki,Amphipoda: Americorophium sp.,100,61.87131051,18.09497512
+Onki_Nov,Nov,Onki,Amphipoda: Eogammarus sp.,84.61538462,4.596438524,11.08095242
+Onki_Nov,Nov,Onki,Decapoda: Emerita sp.,46.15384615,3.987491415,11.33706263
+Onki_Nov,Nov,Onki,Diptera,15.38461538,0.216051783,0.125103045
+Onki_Nov,Nov,Onki,Diptera: Chironomidae,69.23076923,1.963356664,0.823467359
+Onki_Nov,Nov,Onki,Hemiptera: Corixidae,46.15384615,1.390098576,4.445601242
+Onki_Nov,Nov,Onki,Isopoda: Cirolanidae,7.692307692,0.0999001,0.049337267
+Onki_Nov,Nov,Onki,Isopoda: Gnorimosphaeroma sp.,92.30769231,19.09799642,36.97153013
+Onki_Nov,Nov,Onki,Mysidae: Neomysis mercedis,23.07692308,3.129695238,2.898188905
+Onki_Nov,Nov,Onki,Other aquatics (non-insecta),30.76923077,1.839242891,0.106874643
+Onki_Nov,Nov,Onki,Terrestrial insects,76.92307692,1.483048424,7.839420213
+Onmy_Nov,Nov,Onmy,Actinopterygii,14.28571429,0.647414884,1.535631639
+Onmy_Nov,Nov,Onmy,Amphipoda: Americorophium sp.,96.42857143,17.86751064,5.59458559
+Onmy_Nov,Nov,Onmy,Amphipoda: Eogammarus sp.,96.42857143,30.22587205,40.77159015
+Onmy_Nov,Nov,Onmy,Amphipoda: undetermined,3.571428571,0.058548009,0.033452052
+Onmy_Nov,Nov,Onmy,Decapoda: Emerita sp.,10.71428571,0.144713024,0.934746607
+Onmy_Nov,Nov,Onmy,Diptera: Chironomidae,42.85714286,1.80002125,0.450684098
+Onmy_Nov,Nov,Onmy,Hemiptera: Corixidae,60.71428571,2.994644666,2.886098715
+Onmy_Nov,Nov,Onmy,Isopoda: Gnorimosphaeroma sp.,100,41.65372792,44.23431084
+Onmy_Nov,Nov,Onmy,Mysidae: Neomysis mercedis,28.57142857,2.104808643,1.019305647
+Onmy_Nov,Nov,Onmy,Other aquatics (non-insecta),17.85714286,1.452050604,0.586929877
+Onmy_Nov,Nov,Onmy,Other insects,25,0.435462318,1.627543842
+Onmy_Nov,Nov,Onmy,Other terrestrials (Arachnida),3.571428571,0.446428571,0.063511266
+Onmy_Nov,Nov,Onmy,Terrestrial insects,14.28571429,0.168797413,0.26160968
+Onki_Oct,Oct,Onki,Actinopterygii,21.42857143,0.823359647,7.531647693
+Onki_Oct,Oct,Onki,Amphipoda: Americorophium sp.,85.71428571,25.33467331,17.66552034
+Onki_Oct,Oct,Onki,Amphipoda: Eogammarus sp.,64.28571429,6.718130335,12.00729108
+Onki_Oct,Oct,Onki,Diptera,7.142857143,0.210084034,0.026217199
+Onki_Oct,Oct,Onki,Diptera: Chironomidae,78.57142857,25.92508079,10.83261527
+Onki_Oct,Oct,Onki,Hemiptera: Corixidae,7.142857143,0.064935065,0.292284279
+Onki_Oct,Oct,Onki,Isopoda: Gnorimosphaeroma sp.,64.28571429,7.002159889,12.0821048
+Onki_Oct,Oct,Onki,Mysidae: Neomysis mercedis,21.42857143,0.846560847,0.449922204
+Onki_Oct,Oct,Onki,Other aquatics (non-insecta),14.28571429,0.984848485,0.741973405
+Onki_Oct,Oct,Onki,Other insects,14.28571429,1.028138528,0.632870881
+Onki_Oct,Oct,Onki,Other terrestrials (Arachnida),7.142857143,0.132275132,0.091771766
+Onki_Oct,Oct,Onki,Terrestrial insects,85.71428571,30.92975394,37.64578108
+Onmy_Oct,Oct,Onmy,Actinopterygii,7.407407407,0.962000962,2.133339533
+Onmy_Oct,Oct,Onmy,Amphipoda: Americorophium sp.,77.77777778,20.49334776,15.93491643
+Onmy_Oct,Oct,Onmy,Amphipoda: Eogammarus sp.,74.07407407,21.67288051,24.91468989
+Onmy_Oct,Oct,Onmy,Diptera: Chironomidae,66.66666667,13.53745114,6.105864418
+Onmy_Oct,Oct,Onmy,Hemiptera: Corixidae,14.81481481,0.65681445,0.624938492
+Onmy_Oct,Oct,Onmy,Isopoda: Gnorimosphaeroma sp.,85.18518519,24.8775971,27.137381
+Onmy_Oct,Oct,Onmy,Mysidae: Neomysis mercedis,18.51851852,8.421683073,6.395187003
+Onmy_Oct,Oct,Onmy,Other aquatics (non-insecta),37.03703704,5.196642635,11.99978902
+Onmy_Oct,Oct,Onmy,Other insects,22.22222222,3.098937626,3.267890784
+Onmy_Oct,Oct,Onmy,Other terrestrials (Arachnida),3.703703704,0.24691358,1.07526312
+Onmy_Oct,Oct,Onmy,Terrestrial insects,14.81481481,0.83573116,0.410740296
+Onki_Sep,Sep,Onki,Actinopterygii,7.142857143,0.123152709,1.093654447
+Onki_Sep,Sep,Onki,Amphipoda: Americorophium sp.,85.71428571,40.48659467,38.15552123
+Onki_Sep,Sep,Onki,Amphipoda: Eogammarus sp.,57.14285714,5.545390206,7.042178836
+Onki_Sep,Sep,Onki,Diptera: Chironomidae,92.85714286,32.78605732,22.54459392
+Onki_Sep,Sep,Onki,Hemiptera: Corixidae,21.42857143,1.617146859,1.947732825
+Onki_Sep,Sep,Onki,Isopoda: Gnorimosphaeroma sp.,92.85714286,12.55586322,21.05268663
+Onki_Sep,Sep,Onki,Mysidae: Neomysis mercedis,21.42857143,3.894557823,3.394638782
+Onki_Sep,Sep,Onki,Other aquatics (non-insecta),14.28571429,0.397877984,0.154800588
+Onki_Sep,Sep,Onki,Other insects,7.142857143,0.324675325,0.04702491
+Onki_Sep,Sep,Onki,Terrestrial insects,50,2.268683884,4.567167843
+Onmy_Sep,Sep,Onmy,Amphipoda: Americorophium sp.,67.85714286,16.46812955,11.15608809
+Onmy_Sep,Sep,Onmy,Amphipoda: Eogammarus sp.,71.42857143,14.02120697,19.06725142
+Onmy_Sep,Sep,Onmy,Diptera: Chironomidae,92.85714286,14.96826473,9.250413132
+Onmy_Sep,Sep,Onmy,Isopoda: Gnorimosphaeroma sp.,89.28571429,29.50217803,31.55212815
+Onmy_Sep,Sep,Onmy,Mysidae: Neomysis mercedis,67.85714286,19.43976694,18.06521927
+Onmy_Sep,Sep,Onmy,Other aquatics (non-insecta),60.71428571,3.599631905,7.478272826
+Onmy_Sep,Sep,Onmy,Other insects,35.71428571,1.070821832,2.48696076
+Onmy_Sep,Sep,Onmy,Terrestrial insects,14.28571429,0.930000038,0.943666352
