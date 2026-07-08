@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Summary and analysis of natural abundance stable isotope data
 
 This document explains the analyses performed on the stable isotope samples collected in support of the manuscript titled, "Drought-induced sympatry of two salmonid species: Feeding ecology and trophic niches of potential competitors". A separate R markdown file explains the analyses conducted on fish diet (stomach content) samples. Questions regarding these analyses or the R markdown should be directed to Dr. Joseph Kiernan at joseph.kiernan@noaa.gov.
-Load the necessary packages.
+
 
 ```{r Libraries, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -46,6 +46,11 @@ Data file: "Lagoon_fish_isotope.csv".
 This data set includes only age-1+ (yearling) coho salmon and steelhead. Carbon stable isotope values (header "d13C_corr") are lipid corrected values; we mathematically lipid-corrected all fin clips with a C:N ratio > 3.5 (n = 77; 15.6% of the samples). Specifically, we followed the recommendation of Skinner et al. (2016) and applied the nonlinear normalization model developed by Kiljunen et al. (2006) with the Post et al. (2007) percentage lipid calculation. See methods section of manuscript for additional details.
 
 ```{r Load full isotope data}
+# Create a universal output directory
+sia_dir <- "SIA_Output"
+if (!dir.exists(sia_dir)) {
+  dir.create(sia_dir)
+}
 
 data_full<-read.csv("Lagoon_fish_isotope.csv") 
 #The full data set contains fisheries metadata which do not contribute to the current analysis
@@ -146,8 +151,8 @@ overall_results <- overall_wilcox_tests %>%
 full_results_df <- bind_rows(all_results, overall_results) %>%
   select(Period, Isotope, group1, group2, statistic, p, p.signif, effsize)
 
-#Write results
-write_csv(full_results_df, "Isotope_Wilcoxon_Results.csv")
+#Write results to the SIA folder
+write_csv(full_results_df, file.path(sia_dir, "Isotope_Wilcoxon_Results.csv"))
 ```
 
 ### Create a summary table of results for Wilcoxon tests. 
@@ -155,8 +160,7 @@ write_csv(full_results_df, "Isotope_Wilcoxon_Results.csv")
 These results are presented in Supplemental Table S3 in the manuscript. Note: Effect sizes are typically interpreted as small (0.1 to < 0.3), moderate (0.3 to < 0.5), and large (> 0.5).
 
 ```{r Summarizing Wilcoxon test results, results='asis'}
-
-#Uses the full_results_df created in the previous chunk
+# This chunk uses the full_results_df created in the previous chunk
 
 #Reshape data (Pivot wider)
 wide_results <- full_results_df %>%
@@ -216,10 +220,10 @@ library(dplyr)
 library(tidyr)
 library(tibble)
 
-#Define and create an output directory
-siber_dir <- "SIBER_Output"
-if (!dir.exists(siber_dir)) {
-  dir.create(siber_dir)
+# Re-add sia_dir after the environment wipe
+sia_dir <- "SIA_Output"
+if (!dir.exists(sia_dir)) {
+  dir.create(sia_dir)
 }
 
 #Set seed to yield comparable results 
@@ -267,8 +271,8 @@ metrics.table <- as.data.frame(t(combined.metrics)) %>%
                                           "Oct","Nov","Dec","Overall"))) %>%
   arrange(Month, Species)
 
-#Save this table to the SIBER_Output directory:
-write.csv(metrics.table, file.path(siber_dir, "siber_metrics_summary.csv"), row.names = FALSE)
+#Save this table to the SIA_Output directory:
+write.csv(metrics.table, file.path(sia_dir, "siber_metrics_summary.csv"), row.names = FALSE)
 
 metrics.wide <- metrics.table %>%
   #Select columns needed
@@ -300,11 +304,10 @@ metrics.wide %>%
   column_spec(1:5, width = "2cm")
 ```
 
-### Generating stable isotope biplots for each time period 
+### Generating stable isotope biplots for each time period. This is presented as Figure 2 in the manuscript. 
 
-```{r Figure 3, Generate isotope biplot, fig.width=9, fig.height=5}
-
-library(grid) #Required for textGrob
+```{r Figure 2, Generate isotope biplot, fig.width=6.5, fig.height=3.97}
+library(grid) 
 library(patchwork)
 
 #Define labels
@@ -317,7 +320,7 @@ create_siber_biplot <- function(plot_data, plot_code) {
   y_lims <- c(8, 15)
   
   ggplot(plot_data, aes(x = iso1, y = iso2, col = group, fill = group)) +
-    geom_point(size = 1) +
+    geom_point(size = 0.8) + # Scaled down point size slightly for smaller canvas
     stat_ellipse(geom = "polygon", alpha = 0.30, level = 0.40) +
     stat_ellipse(geom = "polygon", alpha = 0.0, level = 0.95) +
     scale_color_manual(values = c("Onki" = "#D55E00", "Onmy" = "#0072B2")) +
@@ -327,9 +330,9 @@ create_siber_biplot <- function(plot_data, plot_code) {
     theme_classic() +
     theme(
       panel.grid = element_blank(),
-      plot.title = element_text(family = "serif", face = "plain", size = 12, hjust = 0),
-      axis.title = element_blank(), # Remove internal axis titles
-      axis.text = element_text(family = "serif", size = 12, color = "black")
+      plot.title = element_text(family = "serif", face = "plain", size = 10, hjust = 0), # Reduced from 12 to 10
+      axis.title = element_blank(), 
+      axis.text = element_text(family = "serif", size = 9, color = "black") # Reduced from 12 to 9
     )
 }
 
@@ -354,15 +357,17 @@ final_plot_list <- map2(all_siber_plots, names(all_siber_plots), function(p, nam
     p <- p + theme(axis.text.y = element_blank())
   }
   
-  #Legend relocation
+  #Legend relocation and resizing
   if (name == "Jun") {
     p <- p + theme(
-      # Position: Inside Upper-Left
-      legend.position = c(0.23, 0.84),
+      # Shifted slightly right and down to prevent y-axis overlap
+      legend.position = c(0.28, 0.78), 
       legend.justification = c(0.5, 0.5),
       legend.background = element_rect(fill = "white", color = "black", linewidth = 0.3),
-      legend.margin = margin(3, 3, 3, 3),
-      legend.title = element_blank(), #Remove "group" title
+      legend.margin = margin(2, 2, 2, 2), # Tighter margins around the legend box
+      legend.key.size = unit(0.7, "lines"), # Shrinks the colored boxes
+      legend.text = element_text(family = "serif", size = 7), # Shrinks the legend text
+      legend.title = element_blank(), 
       text = element_text(family = "serif")
     )
   } else {
@@ -374,7 +379,6 @@ final_plot_list <- map2(all_siber_plots, names(all_siber_plots), function(p, nam
 })
 
 #Main Grid
-#Note: Removed 'guides = "collect"' to respect the specific "Jun" legend settings
 main_grid <- wrap_plots(final_plot_list, ncol = 4, nrow = 2) & 
   theme(text = element_text(family = "serif"))
 
@@ -382,21 +386,22 @@ main_grid <- wrap_plots(final_plot_list, ncol = 4, nrow = 2) &
 y_expr <- expression(paste(delta^{15}, "N (\u2030)"))
 x_expr <- expression(paste(delta^{13}, "C (\u2030)"))
 
-y_grob <- textGrob(y_expr, rot = 90, gp = gpar(fontfamily = "serif", fontsize = 12))
-x_grob <- textGrob(x_expr, gp = gpar(fontfamily = "serif", fontsize = 12))
+# Reduced global axis font size from 12 to 10
+y_grob <- textGrob(y_expr, rot = 90, gp = gpar(fontfamily = "serif", fontsize = 10))
+x_grob <- textGrob(x_expr, gp = gpar(fontfamily = "serif", fontsize = 10))
 
 #Assemble all
 final_siber_panel <- (wrap_elements(y_grob) + main_grid + plot_layout(widths = c(1, 25))) / 
                      wrap_elements(x_grob) + 
-                     plot_layout(heights = c(25, 1))
+                     plot_layout(heights = c(25, 1.1))
 
 final_siber_panel
 
-ggsave(file.path(siber_dir, "Figure_3_biplot.pdf"), final_siber_panel, width = 9, height = 5, dpi = 600)
-ggsave(file.path(siber_dir, "Figure_3_biplot.png"), final_siber_panel, width = 9, height = 5, dpi = 600)
+ggsave(file.path(sia_dir, "Figure_2.pdf"), width = 6.5, height = 3.97, units = "in", dpi = 800, device = cairo_pdf)
+ggsave(file.path(sia_dir, "Figure_2.tif"), width = 6.5, height = 3.97, units = "in", dpi = 800, device = "tiff", compression = "lzw")
 ```
 
-Figure 3. Stable isotope biplots (δ13C versus δ15N) for juvenile coho salmon (Oncorhynchus kisutch; Onki) and steelhead (O. mykiss; Onmy), captured in the Scott Creek lagoon during each month of the study (Jun–Dec, panels a–g respectively). Panel h shows composited data from all months of the study. Points are individual fish samples and filled ellipses are the standard ellipse areas (corrected for small sample size; SEAc). Standard ellipse areas encompass approximately 40% of the isotopic data and represent the core isotopic niche for each species. The larger ellipses contain approximately 95% of the isotopic data for each species.
+Figure 2. Stable isotope biplots (δ13C versus δ15N) for juvenile coho salmon (*Oncorhynchus kisutch*; Onki) and steelhead (*O. mykiss*; Onmy), captured in the Scott Creek lagoon during each month of the study (Jun–Dec, panels a–g respectively). Panel h shows composited data from all months of the study. Points are individual fish samples and filled ellipses are the standard ellipse areas (corrected for small sample size; SEAc). Standard ellipse areas encompass approximately 40% of the isotopic data and represent the core isotopic niche for each species. The larger ellipses contain approximately 95% of the isotopic data for each species.
 
 
 ## Calculating Bayesian Standard Ellipse Area (SEAb)
@@ -426,7 +431,7 @@ ellipses.posterior <- siberMVN(siber.monthly.obj, parms, priors)
 SEA.B <- siberEllipses(ellipses.posterior)
 ```
 
-Preliminary look at the distribution of ellipses for each population as a SIBER density plot. The gradations denote 95, 75 and 50% credible intervals. This plot does not include the overall (study-wide) pooled estimate which is generated later.
+Preliminary look at the distribution of ellipses for each population as a SIBER density plot. The gradations denote 95, 75 and 50% credible intervals. This plot does not include the overall (study-wide) pooled estimate which is generated later. This plot, in part, will be recreated later to produce Figure 3 in the manuscript.
 
 ```{r Creating standard SIBER density plot, echo=TRUE, message=TRUE, warning=TRUE, cache=TRUE}
 #Save current settings
@@ -495,11 +500,11 @@ SEA.B.credibles <- lapply(
 
 #Save this output to the SIBER_Output directory
 write.table(SEA.B.modes, 
-            file = file.path(siber_dir, "SEAb_Modes.csv"), 
+            file = file.path(sia_dir, "SEAb_Modes.csv"), 
             append = F, sep = ',', row.names = T, col.names = NA)
 
 write.table(SEA.B.credibles, 
-            file = file.path(siber_dir, "SEAb_Credible_Intervals.csv"), 
+            file = file.path(sia_dir, "SEAb_Credible_Intervals.csv"), 
             append = F, sep = ',', row.names = T, col.names = NA)
 ```
 
@@ -523,7 +528,7 @@ SEA.B.2$Month <- factor(SEA.B.2$Month,
 ```
 Note: the warning "No id variables; using all as measure variables" is the precise structure we want for the data
 
-Next we re-run the analysis for to generate the "overall" estimates
+Next we re-run the analysis for to generate the "overall" (all monthly data combined) estimates foe each salmonid spp.
 
 ```{r Generate "Overall" SIBER model, echo=TRUE, message=TRUE, warning=TRUE, cache=TRUE}
 
@@ -578,6 +583,7 @@ SEA.B.3 <- separate(data = SEA.B.3, col = variable, into = c("Month","Species"),
 SEA.B.3$Month <- factor(SEA.B.3$Month, levels = c('Jun','Jul','Aug','Sep','Oct','Nov','Dec','Overall')) #re-order months 
 
 ```
+Again, "No id variables; using all as measure variables" is the precise structure we want for the data.
 
 ```{r Creating the "Overall" SIBER density plot, echo=TRUE, message=TRUE, warning=TRUE, cache=TRUE}
 
@@ -594,7 +600,7 @@ siberDensityPlot(
                  main = ""
                  )
 
-#Add red x's for the ML estimated SEAc
+#The following line of code (currently suppressed) will add red x's for the ML estimated SEAc if desired
 #points(1:ncol(SEA.B), group.ML.overall[3,], col="red", pch = "x", lwd = 2)
 ```
 
@@ -619,11 +625,11 @@ SEA.B.overall.credibles <- lapply(
 
 #Save this output to the SIBER_Output directory
 write.table(SEA.B.overall.modes, 
-            file = file.path(siber_dir, "SEAb_Overall_Modes.csv"), 
+            file = file.path(sia_dir, "SEAb_Overall_Modes.csv"), 
             append = F, sep = ',', row.names = T, col.names = NA)
 
 write.table(SEA.B.overall.credibles, 
-            file = file.path(siber_dir, "SEAb_Overall_Credible_Intervals.csv"), 
+            file = file.path(sia_dir, "SEAb_Overall_Credible_Intervals.csv"), 
             append = F, sep = ',', row.names = T, col.names = NA)
 ```
 
@@ -631,8 +637,7 @@ Here we combine SEA.B (monthly) and SEA.B.overall into SEA.B.full
 
 ```{r Create SEA.B.full which combines monthly and overall estimates, echo=TRUE, message=TRUE, warning=TRUE}
 
-#Combination of monthly (SEA.B) and overall (SEA.B.overall) results
-#Combine the two results into a full matrix
+#Combination of monthly (SEA.B) and overall (SEA.B.overall) results into a full matrix
 SEA.B.full <- cbind(SEA.B, SEA.B.overall)
 
 #Define the *exact* column names for the combined matrix
@@ -696,7 +701,7 @@ The above data are not included in the manuscript but confirm that the isotopic 
 
 ### Determining monthly and overall overlap in SIBER
 
-Note: this chunk of code is slow to run
+Note: this chunk of code is very slow to run
 
 ```{r Determining monthly and overall overlap in SIBER}
 
@@ -792,7 +797,7 @@ colnames(bayes.95.overlap.plotting)<-c("Jun","Jul","Aug","Sep","Oct","Nov","Dec"
 #head(bayes.95.overlap.plotting)
 
 boxplot(as.data.frame(bayes.95.overlap.plotting),
-        main = "Overlap (95% CI) based on the posterior distributions of SEAB", 
+        main = "Overlap (95% CI) based on the posterior distributions of SEAb", 
         xlab ="Month",
         ylab = "Proportion niche overlap",
         las =1,
@@ -800,7 +805,7 @@ boxplot(as.data.frame(bayes.95.overlap.plotting),
         boxwex = 0.4
 )
 ```
-Overlap values are presented as a proportion of the total area that overlaps in the two 95% ellipses and overlap values range from 0 when the ellipses are separated to 1.0 when the two ellipses fully overlap.
+Overlap values are presented as a proportion of the total area that overlaps in the two 95% ellipses and overlap values range from 0 when the ellipses are completely separated to 1.0 when the two ellipses fully overlap.
 
 The above plot is not included in the manuscript but is useful to explore the data. The next chunk of code extracts summary statistics for each distribution.
 
@@ -849,59 +854,214 @@ library(tibble) #for rownames_to_column
 results_table %>%
   rownames_to_column(var = "Month") %>%
   kbl(
-    caption = "Summary statistics for the proportional niche overlap (SEAb, 95% CI) between coho salmon and steelhead generated by SIBER.",
+    caption = "Summary statistics for the proportional niche overlap (SEAb, 95% CrI) between coho salmon and steelhead generated by SIBER.",
     digits = 2,
     col.names = c("Month", "Mean", "Median", "Mode")
   ) %>%
-  kable_classic(font = "Cambria", full_width = FALSE)
+  kable_classic(font = "Cambria", full_width = TRUE)
 
 ```
 
-### Creating Figure 4, Isotopic Diet Breadth
+### Creating Figure 3, Isotopic Diet Breadth
 
 Here we make an alternative figure to the SIBER DENSITY PLOT that illustrates the mean SEAb value and credible intervals for each posterior distribution.
 
-```{r Figure 4, echo=TRUE, message=FALSE, warning=FALSE}
+```{r Figure 3, echo=TRUE, message=FALSE, warning=FALSE}
 
 library(egg)
 library(gridExtra)
 library(tidybayes)
+library(dplyr) 
 
-Diet.breadth.plot<-ggplot(data = SEA.B.3,
-    aes(x=Species, y=value, color=Species)) +
-  scale_color_manual(values=c("Onki"="#D55E00","Onmy"="#0072B2")) +
-  stat_pointinterval(
-    aes(size = after_stat(factor(.width))),
-    .width = c(0.5, 0.75, 0.95),
-    point_size = 1.2, 
-    point_color = "black"
-) +
-  scale_size_manual(values=c("0.5" = 36, "0.75" = 18, "0.95" = 9))+
-    labs(y = expression("Dietary niche breadth " (SEA[b], '\u2030' ^2) ),
-       x = "Salmonid species")+
-    facet_wrap(~Month,ncol = 8)+
-    scale_y_continuous(limits=c(0,7.5), breaks=seq(0,8,1))+
-    theme_bw()+
-    theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank())+
-    theme(legend.position="none")
+# Pre-calculate the credible intervals using tidybayes
+ci_95 <- SEA.B.3 %>% group_by(Month, Species) %>% mean_qi(value, .width = 0.95)
+ci_75 <- SEA.B.3 %>% group_by(Month, Species) %>% mean_qi(value, .width = 0.75)
+ci_50 <- SEA.B.3 %>% group_by(Month, Species) %>% mean_qi(value, .width = 0.50)
+
+# Build the plot with stacked crossbars
+Diet.breadth.plot <- ggplot() +
+  # 95% Credible Interval (alpha removed, boxes are solid)
+  geom_crossbar(data = ci_95, aes(x = Species, y = value, ymin = .lower, ymax = .upper, fill = Species),
+                width = 0.15, color = "black", fatten = 0) +
+  # 75% Credible Interval 
+  geom_crossbar(data = ci_75, aes(x = Species, y = value, ymin = .lower, ymax = .upper, fill = Species),
+                width = 0.25, color = "black", fatten = 0) +
+  # 50% Credible Interval 
+  geom_crossbar(data = ci_50, aes(x = Species, y = value, ymin = .lower, ymax = .upper, fill = Species),
+                width = 0.50, color = "black", fatten = 0) +
+  # Add the mean as a black point
+  geom_point(data = ci_50, aes(x = Species, y = value), size = 1.2, color = "black") +
+  scale_fill_manual(values = c("Onki" = "#EAAF80", "Onmy" = "#80B9D9")) +
+  labs(y = expression("Dietary niche breadth " (SEA[b], '\u2030' ^2)), x = "Salmonid species") +
+  facet_wrap(~Month, ncol = 8) +
+  scale_y_continuous(limits = c(0, 7.5), breaks = seq(0, 8, 1)) +
+  theme_bw() +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    legend.position = "none",
+    
+    panel.spacing = unit(0.5, "lines"),
+    axis.title.y = element_text(family = "serif", size = 10), 
+    axis.title.x = element_text(family = "serif", size = 10, margin = margin(t = 7)), 
+    
+    axis.text.y = element_text(family = "serif", size = 9, color = "black"),
+    axis.text.x = element_text(family = "serif", size = 8, color = "black"), 
+    
+    strip.background = element_blank(), 
+    strip.text = element_blank()
+  )
 
 my_tag1 <- c("(a) Jun", "(b) Jul","(c) Aug","(d) Sep","(e) Oct","(f) Nov","(g) Dec","(h) Overall")
 
-Diet.breadth.plot<-tag_facet(Diet.breadth.plot, 
+Diet.breadth.plot <- tag_facet(Diet.breadth.plot, 
           x = -Inf, y = Inf,
           vjust = 1.5, hjust = -0.10,
           open = "", close = "",
           fontface = 1,
-          size = 3.5,
+          # NEW: Drop tag size from 3.2 down to 2.8
+          size = 2.8, 
+          
           tag_pool = my_tag1)
 
 Diet.breadth.plot
 
-ggsave(file.path(siber_dir, "Figure_4_diet_breadth.jpg"), width = 9, height = 5.5, units = "in", dpi = 800, device = "jpg")
-ggsave(file.path(siber_dir, "Figure_4_diet_breadth.png"), width = 9, height = 5.5, units = "in", dpi = 800, device = "png")
+ggsave(file.path(sia_dir, "Figure_3.pdf"), width = 6.5, height = 3.97, units = "in", dpi = 800, device = quartz)
+
+ggsave(file.path(sia_dir, "Figure_3.tif"), width = 6.5, height = 3.97, units = "in", dpi = 800, device = "tiff", compression = "lzw")
 ```
-Figure 4 legend: Estimates of dietary niche breadth (‰^2) for juvenile coho salmon (Oncorhynchus kisutch; Onki) and steelhead (O. mykiss; Onmy) captured in the Scott Creek lagoon. Species-specific estimates were generated for each month of the study (panels a–g) and an overall estimate (h) was produced from pooled data (all months combined) using posterior estimates of Bayesian standard ellipse areas (SEAb). Black dots represent the mean SEAb value after 10,000 iterations and box widths from wide to narrow represent 50, 75, and 95% credible intervals. 
+```{r Figure 3 version 2, echo=TRUE, message=FALSE, warning=FALSE}
+
+library(patchwork)
+library(grid)
+library(tidybayes)
+library(dplyr) 
+
+# Pre-calculate the credible intervals
+ci_95 <- SEA.B.3 %>% group_by(Month, Species) %>% mean_qi(value, .width = 0.95)
+ci_75 <- SEA.B.3 %>% group_by(Month, Species) %>% mean_qi(value, .width = 0.75)
+ci_50 <- SEA.B.3 %>% group_by(Month, Species) %>% mean_qi(value, .width = 0.50)
+
+plot_labels <- c("Jun"="(a) Jun", "Jul"="(b) Jul", "Aug"="(c) Aug", "Sep"="(d) Sep", 
+                 "Oct"="(e) Oct", "Nov"="(f) Nov", "Dec"="(g) Dec", "Overall"="(h) Overall")
+ordered_keys <- c("Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Overall")
+
+# Function to build individual panels (this forces L-shapes on every plot)
+create_diet_plot <- function(month_key) {
+  
+  d95 <- ci_95 %>% filter(Month == month_key)
+  d75 <- ci_75 %>% filter(Month == month_key)
+  d50 <- ci_50 %>% filter(Month == month_key)
+  
+  p <- ggplot() +
+    geom_crossbar(data = d95, aes(x = Species, y = value, ymin = .lower, ymax = .upper, fill = Species),
+                  width = 0.15, color = "black", fatten = 0) +
+    geom_crossbar(data = d75, aes(x = Species, y = value, ymin = .lower, ymax = .upper, fill = Species),
+                  width = 0.25, color = "black", fatten = 0) +
+    geom_crossbar(data = d50, aes(x = Species, y = value, ymin = .lower, ymax = .upper, fill = Species),
+                  width = 0.50, color = "black", fatten = 0) +
+    geom_point(data = d50, aes(x = Species, y = value), size = 1.2, color = "black") +
+    
+    scale_fill_manual(values = c("Onki" = "#EAAF80", "Onmy" = "#80B9D9")) +
+    scale_y_continuous(limits = c(0, 7.3), breaks = seq(0, 8, 1)) +
+    
+    # Place panel tag inside the top-left corner
+    annotate("text", x = -Inf, y = Inf, label = plot_labels[[month_key]], 
+             hjust = -0.10, vjust = 1.5, family = "serif", size = 2.8) +
+    
+    theme_classic() +
+    theme(
+      axis.title = element_blank(), # Removed local titles; we will use global ones
+      axis.text.y = element_text(family = "serif", size = 9, color = "black"),
+      axis.text.x = element_text(family = "serif", size = 7.0, color = "black"),
+      
+      # Force solid axis lines and ticks on every single panel
+      axis.line = element_line(color = "black"),
+      axis.ticks = element_line(color = "black"),
+      axis.ticks.length = unit(0.1, "cm"),
+      
+      legend.position = "none"
+    )
+  
+  # Remove Y-axis numbers for all panels except the first one (Jun)
+  if (month_key != "Jun") {
+    p <- p + theme(axis.text.y = element_blank(),
+                   plot.margin = margin(t = 5, r = 1, b = 5, l = 1, unit = "pt") # <-- THIS LINE
+    )
+  }
+  
+  return(p)
+}
+
+# Generate the list of plots and stitch them together in a 1x8 grid
+all_diet_plots <- lapply(ordered_keys, create_diet_plot)
+main_grid <- wrap_plots(all_diet_plots, ncol = 8, nrow = 1)
+
+# Create global axes
+y_expr <- expression(paste("Dietary niche breadth (", SEA[b], ", \u2030"^2, ")"))
+y_grob <- textGrob(y_expr, rot = 90, gp = gpar(fontfamily = "serif", fontsize = 10))
+x_grob <- textGrob("Salmonid species", gp = gpar(fontfamily = "serif", fontsize = 10))
+
+# Assemble the final panel with patchwork
+Diet.breadth.plot <- (wrap_elements(y_grob) + main_grid + plot_layout(widths = c(0.75, 25))) / 
+                     wrap_elements(x_grob) + 
+                     plot_layout(heights = c(25, 1.0))
+
+Diet.breadth.plot
+
+
+ggsave(file.path(sia_dir, "Figure_3v2.pdf"), width = 6.5, height = 3.97, units = "in", dpi = 800, device = quartz)
+
+ggsave(file.path(sia_dir, "Figure_3v2.tif"), width = 6.5, height = 3.97, units = "in", dpi = 800, device = "tiff", compression = "lzw")
+```
+Figure 3 legend: Estimates of dietary niche breadth (‰^2) for juvenile coho salmon (*Oncorhynchus kisutch*; Onki) and steelhead (*O. mykiss*; Onmy) captured in the Scott Creek lagoon. Species-specific estimates were generated for each month of the study (panels a–g) and an overall estimate (h) was produced from pooled data (all months combined) using posterior estimates of Bayesian standard ellipse areas (SEAb). Black dots represent the mean SEAb value after 10,000 iterations and box widths from wide to narrow represent 50, 75, and 95% credible intervals. 
+
+```{r, quick QC for data validation}
+library(dplyr)
+library(tidyr)
+library(knitr)
+library(kableExtra)
+
+# Re-use the density peak function from earlier in the script to calculate the Mode
+get_density_peak <- function(x) {
+  d <- density(x)
+  return(d$x[which.max(d$y)])
+}
+
+# Extract all metrics from the SEA.B.3 posterior distributions
+verification_table <- SEA.B.3 %>%
+  group_by(Month, Species) %>%
+  summarise(
+    Mean = mean(value),
+    Median = median(value),
+    Mode = get_density_peak(value),
+    # 50% CI bounds (25th to 75th percentiles)
+    CrI_50_low = quantile(value, 0.25),
+    CrI_50_up = quantile(value, 0.75),
+    # 75% CI bounds (12.5th to 87.5th percentiles)
+    CrI_75_low = quantile(value, 0.125),
+    CrI_75_up = quantile(value, 0.875),
+    # 95% CI bounds (2.5th to 97.5th percentiles)
+    CrI_95_low = quantile(value, 0.025),
+    CrI_95_up = quantile(value, 0.975),
+    .groups = "drop"
+  ) %>%
+  # Format the numbers to 2 decimal places
+  mutate(across(where(is.numeric), ~ round(.x, 2)))
+
+# Export the table to the SIA folder
+write.csv(verification_table, file.path(sia_dir, "QC_Data_Validation.csv"), row.names = FALSE)
+
+# Print the verification table
+verification_table %>%
+  kbl(
+    caption = "SEAb Posterior Distribution Central Tendencies and Credible Intervals",
+    align = "llrrrrrrrrr"
+  ) %>%
+  kable_classic(font = "Cambria", full_width = FALSE) %>%
+  add_header_above(c(" " = 2, "Central Tendencies" = 3, "50% CrI" = 2, "75% CrI" = 2, "95% CrI" = 2))
+```
+
 
 ##nicheROVER - Isotopic niche overlap
           
@@ -926,6 +1086,12 @@ library(ggeasy)
 library(patchwork)  
 library(kableExtra) 
 
+# Re-add sia_dir after the environment wipe
+sia_dir <- "SIA_Output"
+if (!dir.exists(sia_dir)) {
+  dir.create(sia_dir)
+}
+
 summary_stats_list <- list() #To store table data
 
 #Load the main data set "lagoon_fish_isotope.csv"
@@ -949,15 +1115,9 @@ nsamples <- 1000 #Number of posterior samples
 
 ```
 
-The following chunk loops through each period, subsets the data, runs the `nicheROVER` analysis, saves all CSV and plot outputs, and stores the `ggplot` object for the final panel (figure 5 in manuscript).
+The following chunk loops through each period, subsets the data, runs the `nicheROVER` analysis, saves all CSV and plot outputs, and stores the `ggplot` object for the final panel (figure 4 in the manuscript).
 
 ```{r Main nicheROVER analysis loop}
-
-#Create an output directory if it doesn't exist
-output_dir <- "nicheROVER_Output"
-if (!dir.exists(output_dir)) {
-  dir.create(output_dir)
-}
 
 for (period in periods) {
   
@@ -1011,13 +1171,12 @@ for (period in periods) {
   print(round(over.mean, 2)) # Show 95%
   
   #Added file.path(output_dir, ...)
-  write.table(over.mean, file = file.path(output_dir, paste0("Rover_Overlap_", period, ".csv")), append = F, sep = ',', row.names = T, col.names = NA)
+  write.table(over.mean, file = file.path(sia_dir, paste0("Rover_Overlap_", period, ".csv")), append = F, sep = ',', row.names = T, col.names = NA)
   
 #Calculate and save credible intervals
   over.cred <- apply(over.stat * 100, c(1:2, 4), quantile, prob = c(.025, .975), na.rm = TRUE)
   
-  # CHANGE: Added file.path(output_dir, ...)
-  write.table(over.cred, file = file.path(output_dir, paste0("Rover_Cred_", period, ".csv")), append = F, sep = ',', row.names = T, col.names = NA)
+  write.table(over.cred, file = file.path(sia_dir, paste0("Rover_Cred_", period, ".csv")), append = F, sep = ',', row.names = T, col.names = NA)
   
 #Niche size calculation
 #Posterior distribution of niche size
@@ -1026,7 +1185,7 @@ for (period in periods) {
   })
   
   #Added file.path(output_dir, ...)
-  write.table(fish.size, file = file.path(output_dir, paste0("Rover_Niche_Size_", period, ".csv")), append = F, sep = ',', row.names = T, col.names = NA)
+  write.table(fish.size, file = file.path(sia_dir, paste0("Rover_Niche_Size_", period, ".csv")), append = F, sep = ',', row.names = T, col.names = NA)
   
 #Point estimate and standard error
   cat("Niche Size (est & se):\n")
@@ -1071,7 +1230,7 @@ for (period in periods) {
   summary_stats_list[[period]] <- period_stats
   
 #Save the standard nicheROVER plots to a PDF for diagnostics
-  pdf(file = file.path(output_dir, paste0(period, "_nicheROVER_base_plots.pdf")), width = 7, height = 6)
+  pdf(file = file.path(sia_dir, paste0(period, "_nicheROVER_base_plots.pdf")), width = 7, height = 6)
   
 #Parameter plots
   par(mar = c(4, 4, .5, .1) + .1, mfrow = c(1, 3))
@@ -1139,32 +1298,53 @@ for (period in periods) {
     geom_vline(xintercept = mean(subset(combined_df, Species == "Onki")$Overlap), linetype = "dashed", size = 0.5) +
     geom_vline(xintercept = mean(subset(combined_df, Species == "Onmy")$Overlap), linetype = "solid", size = 0.5) +
     theme(
-      plot.title = element_text(family = "serif", hjust = 0, size = 11, face = "plain"),
-      axis.text = element_text(family = "serif", size = 10, color = "black"),
+      plot.title = element_text(family = "serif", hjust = 0, size = 10, face = "plain", margin = margin(b = 3, unit = "pt")),
+      axis.text = element_text(family = "serif", size = 9, color = "black"),
       axis.title = element_blank() #Removes all local axis titles
     )
 
-  #Additional axes logic
+ #Additional axes and margin logic
+  top_row <- c("Jun", "Jul", "Aug", "Sep")
+  bottom_row <- c("Oct", "Nov", "Dec", "Overall")
+  left_col <- c("Jun", "Oct")
+  right_col <- c("Sep", "Overall")
+  
+  # Set tight margins (2pt) for inner edges, and standard margins (5pt) for outer edges
+  t_mar <- ifelse(period %in% top_row, 5, 2)
+  b_mar <- ifelse(period %in% bottom_row, 12, 5)
+  l_mar <- ifelse(period %in% left_col, 5, 2)
+  r_mar <- ifelse(period %in% right_col, 5, 2)
+  
+  p <- p + theme(plot.margin = margin(t = t_mar, r = r_mar, b = b_mar, l = l_mar, unit = "pt"))
+
   #Remove X numbers for top row
-  if(period %in% c("Jun", "Jul", "Aug", "Sep")) {
+  if(period %in% top_row) {
     p <- p + theme(axis.text.x = element_blank())
   }
-  #Remove Y numbers for right columns
-  if(!period %in% c("Jun", "Oct")) {
+  #Remove Y numbers for non-left columns
+  if(!period %in% left_col) {
      p <- p + theme(axis.text.y = element_blank())
   }
   
-  #Legend logic (Jun Only)
+#Legend logic (Jun Only) to match Figure 2 perfectly
+  #Legend logic (Jun Only) to match Figure 2 text/margins, with crisp black borders
   if(period == "Jun") {
     p <- p + theme(
-      #Position: Inside upper-left
-      legend.position = c(0.23, 0.74),#c(0.23, 0.84),
-      legend.justification = c(0.5, 0.5),
+      # Pin the legend to the absolute top-left corner to avoid the density tail
+      legend.position = c(0.02, 0.98),
+      legend.justification = c(0, 1),
+      
+      # Match Figure 2
       legend.background = element_rect(fill = "white", color = "black", linewidth = 0.3),
-      legend.margin = margin(3, 3, 3, 3),
-      #legend.title = element_blank(), #Can remove title to save space
+      legend.margin = margin(2, 2, 2, 2), 
+      legend.title = element_blank(),
+      legend.key.size = unit(0.7, "lines"), 
+      legend.text = element_text(family = "serif", size = 7), 
       text = element_text(family = "serif")
-    )
+    ) +
+    # Override the legend keys to have a thin black border around the fill colors
+    guides(fill = guide_legend(override.aes = list(color = "black", linewidth = 0.3)))
+    
   } else {
     #Hide legends for all other panels
     p <- p + theme(legend.position = "none")
@@ -1172,10 +1352,6 @@ for (period in periods) {
   
   #Save the plot object to the list
   plot_list[[period]] <- p
-  
-  #Can use two lines below to ave individual plot files (suppressed to reduce clutter)
-  #ggsave(paste0(period, ".rover.over.plot.pdf"), plot = p)
-  #ggsave(paste0(period, ".rover.over.plot.png"), plot = p)
   
   cat(paste("--- Finished:", period, "---\n"))
 }
@@ -1229,9 +1405,9 @@ kbl(summary_table_formatted,
 
 ```
 
-### Creating Figure 5, Isotopic niche overlap
+### Creating Figure 4, Probability of isotopic niche overlap
 
-```{r Create Figure 5, fig.width=9, fig.height=5, echo=FALSE}
+```{r Create Figure 4, fig.width=6.5, fig.height=3.97, echo=FALSE}
 library(grid)
 library(patchwork)
 
@@ -1240,23 +1416,34 @@ if (length(plot_list) == length(periods)) {
   #Arrange plots
   ordered_plots <- plot_list[c("Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Overall")]
   
-  #Main 4 x 2 grid 
+  # Main 4 x 2 grid (just the stitched plots, no titles)
   main_grid <- wrap_plots(ordered_plots, ncol = 4, nrow = 2) &
     theme(text = element_text(family = "serif"))
   
-  #Global "canvas" labels
-  y_grob <- textGrob("Scaled posterior density", rot = 90, gp = gpar(fontfamily = "serif", fontsize = 14))
-  x_grob <- textGrob("Isotopic niche overlap (%)", gp = gpar(fontfamily = "serif", fontsize = 14))
+  # Global Y canvas label
+  y_expr <- expression(paste("Scaled posterior density"))
+  y_grob <- textGrob(y_expr, rot = 90, gp = gpar(fontfamily = "serif", fontsize = 10))
   
-  #Assemble plot
-  final_panel <- (wrap_elements(y_grob) + main_grid + plot_layout(widths = c(1, 25))) / 
-                 wrap_elements(x_grob) + 
-                 plot_layout(heights = c(25, 1))
+  # Stitch the Y-axis directly to the grid (Keeps layout engine native)
+  raw_panel <- wrap_elements(y_grob) + main_grid + plot_layout(widths = c(0.7, 25))
+  
+  # Add the centered X-axis title
+  final_panel <- raw_panel +
+    plot_annotation(
+      caption = "Isotopic niche overlap probability (%)",
+      theme = theme(
+        # Pull text into visual center relative to the 4 panels
+        plot.caption = element_text(family = "serif", size = 10, face = "plain", hjust = 0.53,
+                                    # Fine-tune the vertical gap using 't' margin
+                                    margin = margin(t = 2, r = 0, b = 2, l = 0, unit = "pt"))
+      )
+    )
   
   print(final_panel)
-  
-  ggsave("Figure_5_nicheRover.pdf", final_panel, width = 9, height = 5)
-  ggsave("Figure_5_nicheRover.png", final_panel, width = 9, height = 5)
+
+  # Output
+  ggsave(file.path(sia_dir, "Figure_4.pdf"), width = 6.5, height = 3.97, units = "in", dpi = 800, device = quartz)
+  ggsave(file.path(sia_dir, "Figure_4.tif"), width = 6.5, height = 3.97, units = "in", dpi = 800, device = "tiff", compression = "lzw")
   
 } else {
   print("Skipped panel plot generation because one or more periods failed.")
@@ -1264,4 +1451,4 @@ if (length(plot_list) == length(periods)) {
 ```
 
 
-Figure 5. Bayesian estimates of isotopic niche overlap (95% region) between juvenile coho salmon (Oncorhynchus kisutch; Onki) and steelhead (O. mykiss; Onmy) captured in the Scott Creek lagoon. Overlap estimates were generated for each month of the study (panels a–g) and an overall estimate (h) was produced from pooled data (all months combined). The estimates were derived from δ13C and δ15N values and represent the probability that an individual coho salmon would be found within the isotopic niche region of steelhead, and vice versa. In each panel, dashed and solid vertical lines identify the mean isotopic niche overlap (%) for coho salmon and steelhead, respectively.
+Figure 4. Bayesian estimates of isotopic niche overlap (95% region) between juvenile coho salmon (Oncorhynchus kisutch; Onki) and steelhead (O. mykiss; Onmy) captured in the Scott Creek lagoon. Overlap estimates were generated for each month of the study (panels a–g) and an overall estimate (h) was produced from pooled data (all months combined). The estimates were derived from δ13C and δ15N values and represent the probability that an individual coho salmon would be found within the isotopic niche region of steelhead, and vice versa. In each panel, dashed and solid vertical lines identify the mean isotopic niche overlap (%) for coho salmon and steelhead, respectively.

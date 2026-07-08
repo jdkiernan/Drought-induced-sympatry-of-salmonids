@@ -1,0 +1,38 @@
+                                 prop1 prop2
+Amphipoda: Americorophium sp._1   0.38  0.22
+Amphipoda: Eogammarus sp._1       0.18  0.27
+Isopoda: Gnorimosphaeroma sp._1   0.12  0.30
+Mysidae: Neomysis mercedis_1      0.09  0.09
+Diptera_1                         0.00  0.00
+Other terrestrials (Arachnida)_1  0.00  0.00
+Terrestrial insects_1             0.09  0.00
+Other insects_1                   0.01  0.01
+Diptera: Chironomidae_1           0.09  0.04
+Amphipoda: undetermined_1         0.00  0.01
+Hemiptera: Corixidae_1            0.01  0.01
+Other aquatics (non-insecta)_1    0.02  0.02
+Actinopterygii_1                  0.01  0.00
+Decapoda: Emerita sp._1           0.01  0.00
+Isopoda: Cirolanidae_1            0.00  0.00
+Amphipoda: Megalorchestia_1       0.00  0.03
+Isopoda: undetermined_1           0.00  0.00
+Decapoda: Megalopa_1              0.00  0.00
+                                 prop1 prop2
+Amphipoda: Americorophium sp._1   0.38  0.22
+Amphipoda: Eogammarus sp._1       0.18  0.27
+Isopoda: Gnorimosphaeroma sp._1   0.12  0.30
+Mysidae: Neomysis mercedis_1      0.09  0.09
+Diptera_1                         0.00  0.00
+Other terrestrials (Arachnida)_1  0.00  0.00
+Terrestrial insects_1             0.09  0.00
+Other insects_1                   0.01  0.01
+Diptera: Chironomidae_1           0.09  0.04
+Amphipoda: undetermined_1         0.00  0.01
+Hemiptera: Corixidae_1            0.01  0.01
+Other aquatics (non-insecta)_1    0.02  0.02
+Actinopterygii_1                  0.01  0.00
+Decapoda: Emerita sp._1           0.01  0.00
+Isopoda: Cirolanidae_1            0.00  0.00
+Amphipoda: Megalorchestia_1       0.00  0.03
+Isopoda: undetermined_1           0.00  0.00
+Decapoda: Megalopa_1              0.00  0.00

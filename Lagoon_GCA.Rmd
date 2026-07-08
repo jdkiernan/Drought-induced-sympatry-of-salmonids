@@ -1,7 +1,7 @@
 ---
 title: "Explaining analyses conducted on Scott Creek Lagoon fish diet data"
-subtitle: "Drought-induced sympatry of two salmonid species: Feeding ecology and trophic niches of potential competitors"
-authors: "Joseph D. Kiernan and Rosealea M. Bond"
+subtitle: "Drought-induced sympatry of two salmonid species: Feeding ecology and trophic
+  niches of potential competitors"
 date: "2025-12-01"
 output:
   html_document:
@@ -12,6 +12,10 @@ output:
       smooth_scroll: true
     number_sections: true
     df_print: paged
+  pdf_document:
+    toc: true
+    toc_depth: '4'
+authors: Joseph D. Kiernan and Rosealea M. Bond
 ---
 
 ```{r Initial setup, include=FALSE}
@@ -54,9 +58,9 @@ Data.Full <- read_csv("OUT.Consumed.csv")
 
 ```
 
-## Fish Diet Summary (Table 2)
+## Fish Diet Summary (Table S2 in manuscript)
 
-```{r Table 2 Fish summary, message=FALSE, warning=FALSE}
+```{r Table S2 Fish summary, message=FALSE, warning=FALSE}
 
 #Calculate summary statistics for each month separately
 monthly_stats <- Data.Full %>%
@@ -90,7 +94,7 @@ final_fish_summary <- bind_rows(monthly_stats, overall_stats) %>%
 
 final_fish_summary %>%
   kbl(
-    caption = "Table 2 (partial). Monthly summaries of the number of stomach samples collected from lagoon-rearing juvenile coho salmon (Onki) and steelhead (Onmy)",
+    caption = "Table S2 (partial). Monthly summaries of the number of stomach samples collected from lagoon-rearing juvenile coho salmon (Onki) and steelhead (Onmy)",
     col.names = c("Month", "Species", "Count", "Mean", "Std. Dev."), 
     digits = c(0, 0, 0, 1, 1),
     format = "html"
@@ -110,7 +114,7 @@ IRI Workflow:
 
 2. Run DietR function to calculate IRI: (1) by species and month and (2) by species for the whole study (i.e., "Overall" - all sample periods [months] combined).
 
-3. Save IRI output - Supplemental Table *S2*
+3. Save IRI output - Supplemental Table *S3*
 
 4. Create Figure 1 - IRI Output by species for each month of the study and overall
 
@@ -190,7 +194,7 @@ write.csv(IRI.study.df, "results/IRI_Study_Output.csv", row.names = FALSE)
 
 ### Extract %IRI calculations and present values in a summary table
 
-These data contribute to Figure 1 and also appear as Table S2 in the manuscript
+These data contribute to Figure 1 and also appear as Table S3 in the manuscript
 
 ```{r Table of IRI values, echo=TRUE, message=FALSE, warning=FALSE}
 # Load libraries
@@ -258,7 +262,7 @@ my_alignment <- c("l", "l", rep("r", n_data_cols))
 
 #Generate table
 knitr::kable(final_table, 
-             caption = "Table S2: Index of relative importance values (IRI, %) by month for each prey category identified in the stomachs of juvenile coho salmon (Onki) and steelhead (Onmy) ",
+             caption = "Table S3: Index of relative importance values (IRI, %) by month for each prey category identified in the stomachs of juvenile coho salmon (Onki) and steelhead (Onmy) ",
              col.names = c("Predator", "Prey taxon or category", names(final_table)[3:n_total_cols]),
              align = my_alignment) %>%
   kable_styling(
@@ -271,6 +275,47 @@ knitr::kable(final_table,
   collapse_rows(columns = 1, valign = "top")
 ```
 
+
+### Create table of "overall" IRI values, sorted from highest to lowest. 
+These data are used to check against the order prey categories are presented in Figure 1.
+
+```{r Sorted Overall IRI Table and Export}
+# Load the taxa groupings to grab the codes
+Prey.Codes <- read.csv("TaxaGroupings.csv") %>%
+  select(PreyCategory, Code) %>%
+  distinct()
+
+# Filter for 'Overall', join the codes, sort from highest to lowest, and organize columns
+overall_ranked_iri <- combined_data %>%
+  filter(Month == "Overall") %>%
+  select(Species, Prey, PercentIRI) %>%
+  left_join(Prey.Codes, by = c("Prey" = "PreyCategory")) %>%
+  select(Species, Prey, Code, PercentIRI) %>% # Places 'Code' right before the IRI values
+  group_by(Species) %>%
+  arrange(Species, desc(PercentIRI)) %>%
+  ungroup()
+
+# Export the cleanly ordered data to a CSV file
+write.csv(overall_ranked_iri, "results/Overall_Ranked_IRI_By_Species.csv", row.names = FALSE)
+
+# Format the numbers for the display table with 3 decimal places
+overall_ranked_iri %>%
+  mutate(PercentIRI = case_when(
+    PercentIRI == 0 ~ "---",
+    TRUE ~ sprintf("%.3f%%", PercentIRI) 
+  )) %>%
+  knitr::kable(
+    caption = "Overall Study Niche Breadth: Prey categories ranked from highest to lowest Index of Relative Importance (%IRI).",
+    col.names = c("Predator Species", "Prey Taxon / Category", "Code", "Overall IRI (%)"),
+    align = "lllr" 
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed"),
+    full_width = FALSE,
+    position = "left"
+  ) %>%
+  collapse_rows(columns = 1, valign = "top")
+```
 ## Graphical contrasts of IRI values (Fig 1 in manuscript)
 
 Goal: Create network plots using the *networkD3* package for the diets of juvenile Coho Salmon and Steelhead to illustrate Index of Relative Importance (%IRI) values. The initial plots display %IRI for each taxa group on the left side and monthly %IRI values on the right hand side. 
@@ -393,7 +438,21 @@ coho.plot <- sankeyNetwork(Links = coho.scaled, Nodes = nodes,
                     NodeGroup = "group", LinkGroup = "group",
                     colourScale = my_color_co, iterations = 0, 
                     nodeWidth = 5, nodePadding = 15,
-                    sinksRight = F, fontSize = 12)
+                    sinksRight = F, fontSize = 12,
+                    margin = list(left = 50, right = 0)) 
+
+library(htmlwidgets)
+coho.plot <- onRender(coho.plot,
+  '
+  function(el, x) {
+    d3.selectAll(".node text")
+      /* NEW FILTER: Targets only the starting nodes (zero incoming links) */
+      .filter(function(d) { return d.targetLinks.length === 0; }) 
+      .attr("x", -10) 
+      .attr("text-anchor", "end"); 
+  }
+  '
+)
 
 coho.plot
 
@@ -411,38 +470,35 @@ coho.plot
 Second half of Figure 1 (combined below). Note some of the code is repeated form the Coho plot and has been commented out in this section.
 
 ```{r Steelhead Plot, echo=TRUE, message=FALSE, warning=FALSE, cache=TRUE, cache.path="cache/"}
-
 #Step 1: Read in steelhead monthly DietR output data
-sh.dat <- read.csv('DietR_Sankey_Steelhead.csv', sep = ",", header = T) #79 obs, 9 var.
+sh.dat <- read.csv('DietR_Sankey_Steelhead.csv', sep = ",", header = T)
 
-# #Step 2: Bring in taxa groupings codes
-# DietCode.dat <- read.csv('TaxaGroupings.csv', sep = ",", header = T) #62 obs, 6 var.
-# 
-# DietCode1 <- DietCode.dat  %>% 
-#   select(PreyCategory, Code) %>%   #62 obs of 2 var.
-#   distinct(PreyCategory, Code)     #18 obs of 2 var.
+#Step 2: Bring in taxa groupings codes
+DietCode.dat <- read.csv('TaxaGroupings.csv', sep = ",", header = T)
 
-#Step 3: Set up df with Source and Taget information ("links")
+DietCode1 <- DietCode.dat  %>% 
+  select(PreyCategory, Code) %>%   
+  distinct(PreyCategory, Code)     
+
+#Step 3: Set up df with Source and Target information
+# REVERSED: Month is now the Source (Left), Code is the Target (Right)
 steelhead <- sh.dat %>% 
   left_join(., DietCode1) %>% 
-  mutate(Source = Code,
-         Target = Month,
+  mutate(Source = Month,
+         Target = Code,
          Group = as.factor(Group))
-
-#Check the df structure
-str(steelhead)
 
 #Steelhead only
 sh.entirestudy <- entirestudy2 %>%
-  filter(Species == "Onmy") #16 obs of 7 var.
+  filter(Species == "Onmy") 
 
-#Step 4.4 Join codes to coho data 
+#Step 4.4 Join codes to steelhead data 
 steelhead2 <- steelhead %>% 
-  left_join(., sh.entirestudy, by = "Code") %>% #79 obs of 18 var
+  left_join(., sh.entirestudy, by = "Code") %>% 
   select(Species.x, Month, Month2, Code, Group, Source, Target, PercentOccurrence, PercentNumber, PercentMass, PercentIRI,
-         Study_PercentOccurrence, Study_PercentNumber, Study_PercentMass, Study_PercentIRI) #reduce columns #79 obs of 15 var.
+         Study_PercentOccurrence, Study_PercentNumber, Study_PercentMass, Study_PercentIRI) 
 
-#Step 4.5 Calculate the sum of monthly values to help scale them relative to the entire study importance
+#Step 4.5 Calculate the sum of monthly values
 sum.monthly.sh <- steelhead %>% 
   group_by(Code) %>% 
   summarise(PercentOccurrence.total = sum(PercentOccurrence),
@@ -450,17 +506,16 @@ sum.monthly.sh <- steelhead %>%
             PercentMass.total = sum(PercentMass),
             PercentIRI.total = sum(PercentIRI))
 
-#Step 4.6 Join montly sums to steelhead data
+#Step 4.6 Join monthly sums to steelhead data
 steelhead3 <- steelhead2 %>% 
-  left_join(., sum.monthly.sh) #79 obs of 19 var.
+  left_join(., sum.monthly.sh) 
 
 #Step 4.7 Scale monthly values to study values 
 sh.scaled <- steelhead3 %>% 
   mutate(PercentOccurrence.scaled = (PercentOccurrence/PercentOccurrence.total)*Study_PercentOccurrence, 
          PercentNumber.scaled = (PercentNumber/PercentNumber.total)*Study_PercentNumber,
          PercentMass.scaled = (PercentMass/PercentMass.total)*Study_PercentMass,
-         PercentIRI.scaled = (PercentIRI/PercentIRI.total)*Study_PercentIRI) #Scaling each value by the entire study value
-#79 obs of 23 var.
+         PercentIRI.scaled = (PercentIRI/PercentIRI.total)*Study_PercentIRI) 
 
 #Step 5: Create nodes
 nodes <- data.frame(
@@ -468,21 +523,36 @@ nodes <- data.frame(
            as.character(sh.scaled$Target)) %>% unique()
 )
 
-#Step 6: Create source and target indexes (links?)
+#Step 6: Create source and target indexes
 sh.scaled$IDsource <- match(sh.scaled$Source, nodes$name) -1 
 sh.scaled$IDtarget <- match(sh.scaled$Target, nodes$name) -1
 
-#Step 7: Add a 'group' column to the nodes data frame:
-#Note %IRI < .1 are grouped (10) and Months are grouped (11)
-nodes$group <- as.factor(c("1", "2", "3", "4", "5", "10", "10", "10", "10", "10", "10","10", "10", "10", "10", "10", "11", "11", "11", "11", "11", "11", "11"))
+#Step 7: Dynamically extract the exact group assignments from the link data
+# Since Target is the Taxa in this reversed plot, we map the node name to the Target's Group
+node_groups <- sh.scaled %>% 
+  select(Target, Group) %>% 
+  distinct()
 
-#Step 8: Assign a color for each group: 
-#Note %IRI < 1% are gray and Months are black.
-my_color.sh <- 'd3.scaleOrdinal() .domain(["1", "2", "3", "4", "5", "10", "11"])
-                               .range(["#ABBF29", "#6FA4A6", "#00429D", "#6F812A", "#43749E", "gray", "black"])'
+nodes <- nodes %>%
+  left_join(node_groups, by = c("name" = "Target")) %>%
+  # Assign group 11 to months, and use the exact inherited Group for the Taxa
+  mutate(group = ifelse(name %in% c("Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"), 
+                        "11", as.character(Group))) %>%
+  mutate(group = as.factor(group))
+
+# Blank out the month labels so they don't duplicate the Coho labels
+nodes$name <- ifelse(nodes$group == "11", " ", as.character(nodes$name))
+
+#Step 8: Unify the Steelhead color scale with the Coho color scale
+# (Ensuring domain and range match perfectly)
+my_color.sh <- 'd3.scaleOrdinal() .domain(["1", "2", "3", "4", "5", "6", "10", "11"])
+                               .range(["#00429D", "#6FA4A6", "#ABBF29", "#A7D3B4", "#6F812A", "#43749E", "gray", "black"])'
 
 #Step 9: Set color for links to correspond with groups
 sh.scaled$group <- sh.scaled$Group
+
+# Blank out the month labels so they don't duplicate the Coho labels in the final figure
+nodes$name <- ifelse(nodes$group == "11", " ", as.character(nodes$name))
 
 #Step 10: Build the Sankey plot!
 sh.plot <- sankeyNetwork(Links = sh.scaled, Nodes = nodes,
@@ -491,7 +561,8 @@ sh.plot <- sankeyNetwork(Links = sh.scaled, Nodes = nodes,
                            NodeGroup = "group", LinkGroup = "group",
                            colourScale = my_color.sh, iterations = 0, 
                            nodeWidth = 5, nodePadding = 15,
-                           sinksRight = F, fontSize = 12)
+                           sinksRight = F, fontSize = 12,
+                           margin = list(left = 0, right = 50)) # Push right margin for taxa labels
 
 sh.plot
 
@@ -501,92 +572,125 @@ sh.plot
 ```
 
 ### Figure 1 (Combined Plot)
-Note: Figure labeling was done outside of R.
+Note: Figure labeling was done outside of R.```{r Combined Plot, echo=TRUE, message=FALSE, warning=FALSE, cache=TRUE, cache.path="cache/"}
+#Goal: to make a plot with coho on the left, SH on the right and month in the middle joining the two
 
 ```{r Combined Plot, echo=TRUE, message=FALSE, warning=FALSE, cache=TRUE, cache.path="cache/"}
 #Goal: to make a plot with coho on the left, SH on the right and month in the middle joining the two
 
-#Step 1: Pull coho and steelhead datasets together and switch columns for SH. 
-coho2 <- coho.scaled %>% 
-  select(Species.x, Source, Target, PercentIRI.scaled) #77 obs of 4 var.
+#Step 1: Format Coho Data (Taxa -> Month)
+coho2 <- coho.scaled %>%
+  mutate(Target_New = paste0(Month, "_CO")) %>%
+  select(Species.x, Source = Code, Target = Target_New, PercentIRI.scaled)
 
-#Steelhead need to be opposite of Coho columns and make a new code variable (unique to sh).
-sh2 <- sh.scaled  %>% 
-  select(Species.x, Target, PercentIRI.scaled, Source) %>%
-  mutate(Target.original = Target,
-         Source.original = Source) %>%       #relabeling for clarity
-  select(-Target, -Source) %>%               #remove old named columns
-  mutate(label = ".sh") %>%                  #creating column to be added to Source to create a unique label
-  tidyr::unite(Source2, 4:5, remove = F) %>% #creates ID as CODE2
-  mutate(Target = Source2,
-         Source = Target.original) %>%       #Need to switch Source & Target columns to be opposite coho.
-  select(Species.x, Source, Target, PercentIRI.scaled) #79 obs of 4 var
+#Step 2: Format Steelhead Data (Month -> Taxa)
+sh2 <- sh.scaled %>%
+  mutate(Source_New = paste0(Month, "_SH"),
+         Target_New = paste0(Code, "_SH_Taxa")) %>%
+  select(Species.x, Source = Source_New, Target = Target_New, PercentIRI.scaled)
 
-#Append the data together
-all <- coho2 %>% 
-  bind_rows(sh2) #156 obs of 4 var.
+#Step 3: Combine and assign clean color groupings
+all <- bind_rows(coho2, sh2) %>%
+  mutate(Group = case_when(
+    grepl("^AME", Source) | grepl("^AME", Target) ~ "1",
+    grepl("^GAM", Source) | grepl("^GAM", Target) ~ "2",
+    grepl("^GNO", Source) | grepl("^GNO", Target) ~ "3",
+    grepl("^TER", Source) | grepl("^TER", Target) ~ "4",
+    grepl("^NEO", Source) | grepl("^NEO", Target) ~ "5",
+    grepl("^CHI", Source) | grepl("^CHI", Target) ~ "6",
+    grepl("^ORC|^EME|^MEG", Source) | grepl("^ORC|^EME|^MEG", Target) ~ "12",
+    TRUE ~ "10"
+  ) %>% as.factor())
 
-#Create an epic grouping column (to set link colors)
-all <- all %>% 
-  mutate(Group = as.factor(ifelse(Source == "AME" | Target == "AME_.sh", 1, 
-                        ifelse(Source == "GAM" | Target == "GAM_.sh", 2, 
-                               ifelse(Source == "GNO" | Target == "GNO_.sh", 3,
-                                      ifelse(Source == "TER", 4,
-                                             ifelse(Source == "NEO" | Target == "NEO_.sh", 5,
-                                                    ifelse(Source == "CHI" | Target == "CHI_.sh", 6,
-                                                           # ifelse(Source == "OAN" | Target == "OAN_.sh", 7,
-                                                           #        ifelse(Source == "FSH", 8,
-                                                           #               ifelse(Source == "OIA", 9,
-                                                                                ifelse(Source == "ORC" | Target == "ORC_.sh"
-                                                                                       | Source == "EME" | Target == "EME_.sh"
-                                                                                       | Source == "MEG" | Target == "MEG_.sh",
-                                                                                       12, 10)))))))))#)))
-#Note Group = 11 is for the months (black bars).
-#156 obs of 5 var.
-
-#Step 2: Create nodes
-nodes <- data.frame(
-  name = c(as.character(all$Source), 
-           as.character(all$Target)) %>% unique()
+#Step 4: Create transparent dummy links to force the center gap between right and left halves
+dummy_links <- data.frame(
+  Species.x = "Dummy",
+  Source = paste0(c("Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"), "_CO"),
+  Target = paste0(c("Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"), "_SH"),
+  PercentIRI.scaled = 0.0001, 
+  Group = as.factor("13") 
 )
 
-#Step 3: Add a 'group' column to the nodes data frame:
-#Note: Data type must be factor.
-nodes$group <- as.factor(c("1", "2", "3", "4", "5", "6", "10", "10", "10", "10", "10", "10", "10", "10", "10", "10", "10", "10", #CO 
-                           "11", "11", "11", "11", "11", "11", "11", #Months
-                           "3", "2", "1", "5", "6", "10", "10", "10", "10", "10", "10", "10", "10", "10", "10", "10")) #SH
+all <- bind_rows(all, dummy_links)
 
-#Step 4: Assign a color for each group: 
-#Note %IRI < 1% are gray, months are black, and marine organisms are orange.
-my_color.all <- 'd3.scaleOrdinal() .domain(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"])
-                               .range(["#00429D", "#6FA4A6", "#ABBF29", "#A7D3B4", "#6F812A", "#43749E", "#43442D", "#01665e", 
-                               "#824D99", "gray", "black", "gray"])' #change last color to "orange" to highlight marine spp.
+#Step 5: Explicitly define Node order to prevent stacking when iterations = 0
+coho_taxa <- unique(coho2$Source)
+coho_months <- paste0(c("Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"), "_CO")
+sh_months <- paste0(c("Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"), "_SH")
+sh_taxa <- unique(sh2$Target)
 
-#Step 5: Create source and target indexes (links?)
+nodes <- data.frame(name = c(coho_taxa, coho_months, sh_months, sh_taxa))
+
+#Step 6: Assign Node color groups
+nodes <- nodes %>%
+  mutate(group = case_when(
+    grepl("_CO$|_SH$", name) ~ "11", # Months
+    grepl("^AME", name) ~ "1",
+    grepl("^GAM", name) ~ "2",
+    grepl("^GNO", name) ~ "3",
+    grepl("^TER", name) ~ "4",
+    grepl("^NEO", name) ~ "5",
+    grepl("^CHI", name) ~ "6",
+    grepl("^ORC|^EME|^MEG", name) ~ "12",
+    TRUE ~ "10"
+  ) %>% as.factor())
+
+#Step 7: Map the exact d3 Color Scale
+my_color.all <- 'd3.scaleOrdinal() .domain(["1", "2", "3", "4", "5", "6", "10", "11", "12", "13"])
+                               .range(["#00429D", "#6FA4A6", "#ABBF29", "#A7D3B4", "#6F812A", "#43749E", "gray", "black", "orange", "#00000000"])'
+
+#Step 8: Calculate indices and clean up display labels
 all$IDsource <- match(all$Source, nodes$name) - 1 
 all$IDtarget <- match(all$Target, nodes$name) - 1
 
-#Step 6: Set color for links to correspond with groups
-all$links.col <- all$Group #156 obs of 8 var.
+nodes$name <- gsub("_SH_Taxa", "", nodes$name) # Strip the steelhead suffix
+nodes$name <- ifelse(grepl("_CO$|_SH$", nodes$name), " ", nodes$name) # Blank the months
 
-#Step 7: Remove labels (if needed)
-nodes$name <- ' '
-
-
+#Step 9: Build Plot
 all.plot <- sankeyNetwork(Links = all, Nodes = nodes,
               Source = "IDsource", Target = "IDtarget",
               Value = "PercentIRI.scaled", NodeID = "name", 
-              NodeGroup = "group", LinkGroup = "links.col",
+              NodeGroup = "group", LinkGroup = "Group",
               colourScale = my_color.all,  
               iterations = 0, nodeWidth = 5, nodePadding = 10,
-              sinksRight = F, fontSize = 10,
-              height = 96*5, width = 96*5) #96 pixles = 1 inch
-all.plot
+              sinksRight = F, fontSize = 12,
+              margin = list(left = 50, right = 50)) 
 
-# saveNetwork(all.plot, "figures/Sankey/SpeciesCombined_Sankey.html", selfcontained = T)
-# saveWidget(all.plot, "figures/Sankey/SpeciesCombined_Sankeywidget.html")
+#Step 10: Inject JavaScript for margin labels
+library(htmlwidgets)
+all.plot <- onRender(all.plot,
+  '
+  function(el, x) {
+    // Target Coho Taxa (Left)
+    d3.selectAll(".node text")
+      .filter(function(d) { return d.targetLinks.length === 0; }) 
+      .attr("x", -10) 
+      .attr("text-anchor", "end"); 
+      
+    // Target Steelhead Taxa (Right)
+    d3.selectAll(".node text")
+      .filter(function(d) { return d.sourceLinks.length === 0; }) 
+      .attr("x", 10) 
+      .attr("text-anchor", "start");
+  }
+  '
+)
+
+# High resolution exports
+# Due to the complexity of the plot, all labels will be manually manipulated outside of R
+library(webshot2)
+library(magick)
+
+saveWidget(all.plot, "Figure_1_temp.html", selfcontained = TRUE)
+
+webshot(url = "Figure_1_temp.html", file = "Figure_1.pdf", delay = 0.5, zoom = 6)
+
+webshot(url = "Figure_1_temp.html", file = "Figure_1_temp.png", delay = 0.5, zoom = 6)
+img <- image_read("Figure_1_temp.png")
+image_write(img, format = "tiff", path = "Figure_1.tif", density = "600x600", compression = "lzw")
+
+unlink(c("Figure_1_temp.html", "Figure_1_temp.png"))
 ```
-
 ## Schoener's similarity index (D)
 
 As a univariate measure of diet overlap, we calculated Schoener's similarity index (D) for each salmonid species during each sample period using the *FSAmisc* package (Ogle 2022). Index values range from 0 to 1 and values ≥ 0.6 are typically considered significant evidence of dietary overlap (Wallace Jr. 1981).
@@ -674,9 +778,9 @@ all_results <- lapply(months_to_analyze,
 #Name the list elements with the month abbreviations
 names(all_results) <- months_to_analyze
 
-#Accessing the Results
+#Accessing the Rrsults
 
-#We can access any individual month's full result:
+#Note: we can access any individual month's full result:
 #print(all_results$Jun)
 
 #Or access a summary for just one specific month of interest (e.g., Sep):
@@ -912,7 +1016,7 @@ for (month_abbr in months_to_analyze) {
     left_join(AB_df, by = "Prey_Item") %>%
     mutate(
       Month = month_abbr,
-      #Convert the pattern index back to the Predator name (Onki or Onmy)
+      #Convert the pattern index back to the predator name (Onki or Onmy)
       Predator = colnames(result$comb)[index] 
       ) %>%
     select(Month, Predator, Prey_Item, A_stat, B_stat, stat, p.value) 
@@ -927,7 +1031,7 @@ for (month_abbr in months_to_analyze) {
 
 #Combine and sort the results
 final_indicators_table <- bind_rows(formatted_results_list) %>%
-  #Convert Month to a factor so it sorts by time (Jun, Jul...) not alphabet
+  #Convert Month to a factor so it sorts by time (Jun, Jul...)
   mutate(Month = factor(Month, levels = months_to_analyze)) %>%
   #Sort: 1) Month, 2) Predator (Onki < Onmy), 3) P-value (Lowest to Highest)
   arrange(Month, Predator, p.value)
@@ -951,7 +1055,7 @@ final_indicators_table %>%
 
 ## Nonmetric multidimensional scaling (NMDS) & Analysis of Similarities (ANOSIM)
 
-Nonmetric multidimensional scaling (NMDS) ordinations were used to explore patterns of variation among the stomach contents of individual lagoon-captured coho salmon and steelhead. We assessed the contribution and significance of each prey category to the NMDS ordination using the ‘envfit’ function in ‘vegan’, applying 999 permutations and a significance threshold of p ≤ 0.01. 
+Nonmetric multidimensional scaling (NMDS) ordinations were used to explore patterns of variation among the stomach contents of individual lagoon-captured coho salmon and steelhead. We assessed the contribution and significance of each prey category to the NMDS ordination using the ‘envfit’ function in ‘vegan’, applying 999 permutations and a significance threshold of *p* ≤ 0.01. 
 
 To determine whether the composition of the diets of coho salmon and steelhead were distinct, we employed one-way analysis of similarities (ANOSIM; Clarke 1993) on the same Bray-Curtis matrix used for NMDS ordinations. ANOSIM generates a test statistic (R) scaled between −1 and 1 to describe group differences. A positive R-value indicates separation between groups, a value of 0 indicates no separation, and a negative value indicates that variability within groups is greater than the variability between groups (Clark and Gorley 2001). The statistical significance of the R-statistic was determined with 999 random permutations.
 
@@ -974,7 +1078,7 @@ NMDS data loading and pre-processing
 
 ```{r NMDS data loading and pre-processing, message=FALSE, warning=FALSE}
 
-#Read in the main data (332 rows, 26 columns)
+#Read in the main data (expect 332 rows, 26 columns)
 Fish.Guts.All.Prey <- read_csv("OUT.Consumed.csv")
 
 #Read in the groupings/codes
@@ -1030,7 +1134,7 @@ analyze_diet <- function(data, subset_name, prey_indices) {
   #Run ANOSIM analysis
   anosim_res <- anosim(guts_arcsine, data$Species, permutations = 999, distance = "bray")
   
-  #Plotting Data
+  #Plotting data
   plot_df <- data.frame(
     NMDS1 = nmds_res$points[,1],
     NMDS2 = nmds_res$points[,2],
@@ -1130,12 +1234,11 @@ kbl(summary_df,
                 html_font = "Cambria") %>%
   add_header_above(c(" " = 1, "ANOSIM" = 2, "NMDS" = 2))
 ```
-
 The above are used, in part, to populate Table 4 in the manuscript
 
-### Create and assemble Figure 2 (NMDS plots)
+### Create and assemble Figure S1 (NMDS plots)
 
-```{r Create Figure 2 plot labels}
+```{r Create Figure S1 plot labels}
 #Define standardized labels for all plots
 #This maps the internal data code (Jun) to journal preferred format ((a) Jun)
 plot_labels <- c(
@@ -1150,10 +1253,10 @@ plot_labels <- c(
 )
 ```
 
-### Figure 2. NMDS Ordination plots
+### Figure S1. NMDS Ordination plots
 
-```{r Create multi-panel Figure 2, fig.width=9, fig.height=5, echo=FALSE}
-library(grid) #Required for textGrob
+```{r Create multi-panel Figure S1, fig.width=9, fig.height=5, echo=FALSE}
+library(grid) 
 library(patchwork)
 
 #Define panel labels
@@ -1173,7 +1276,7 @@ all_plots <- map2(results_list, names(results_list), function(res, name) {
       axis.title = element_blank() #No internal titles
     )
   
-  #CONDITIONAL FORMATTING: Only add the legend to the "Overall" plot
+  #Only add the legend to the "Overall" plot
   if (name == "Overall") {
     p <- p + theme(
       legend.position = c(0.22, 0.85),
@@ -1198,17 +1301,17 @@ main_grid <- wrap_plots(all_plots, ncol = 4, nrow = 2) &
 y_grob <- textGrob("NMDS2", rot = 90, gp = gpar(fontfamily = "serif", fontsize = 12))
 x_grob <- textGrob("NMDS1", gp = gpar(fontfamily = "serif", fontsize = 12))
 
-#Assemble the "canvas"
+#Assemble the canvas
 final_plot <- (wrap_elements(y_grob) + main_grid + plot_layout(widths = c(1, 25))) / 
                wrap_elements(x_grob) + 
                plot_layout(heights = c(25, 1))
 
 final_plot
 
-ggsave("Figure_2_NMDS.pdf", final_plot, width = 9, height = 5, dpi = 600)
-ggsave("Figure_2_NMDS.png", final_plot, width = 9, height = 5, dpi = 600)
+ggsave("Figure_S1_NMDS.pdf", final_plot, width = 9, height = 5, dpi = 600)
+ggsave("Figure_S1_NMDS.tif", final_plot, width = 9, height = 5, dpi = 600, device = "tiff", compression = "lzw")
 ```
 
-Figure 2. Ordination plots (NMDS) of the stomach contents of juvenile coho salmon (*Oncorhynchus kisutch*; Onki) and steelhead (*O. mykiss*; Onmy) captured in the Scott Creek lagoon during each month of the study (Jun–Dec, panels a–g, respectively). Panel h shows composited data from all months of the study. Points are individual samples and ellipses represent the 95% confidence interval around the centroid of each fish species in ordination space. Vectors illustrate prey categories with significant (*p* < 0.01) loadings on NMDS axes 1 and 2, and prey category codes are defined in Table 1. 
+Figure S1. Ordination plots (NMDS) of the stomach contents of juvenile coho salmon (*Oncorhynchus kisutch*; Onki) and steelhead (*O. mykiss*; Onmy) captured in the Scott Creek lagoon during each month of the study (Jun–Dec, panels a–g, respectively). Panel h shows composited data from all months of the study. Points are individual samples and ellipses represent the 95% confidence interval around the centroid of each fish species in ordination space. Vectors illustrate prey categories with significant (*p*< 0.01) loadings on NMDS axes 1 and 2, and prey category codes are defined in Table 1 of the main document. Each panel is an independent ordination and the unitless axes are arbitrary and unique to each time period.
 
 Figure note: The published figure may differ from the one produced above as we manually manipulated the position of some invertebrate prey category labels to reduce clutter and improve clarity.
