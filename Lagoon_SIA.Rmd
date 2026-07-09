@@ -39,7 +39,7 @@ library(rstatix)
 library(readr)    
 library(knitr)
 library(kableExtra)
-
+library(coin)
 ```
 Data file: "Lagoon_fish_isotope.csv". 
 
@@ -116,40 +116,41 @@ data_long <- data_filtered %>%
     values_to = "value"
   )
 
-# Run Wilcoxon tests
+# --- 1. Monthly Tests & Effect Sizes ---
 all_wilcox_tests <- data_long %>%
   group_by(Month, Isotope) %>%
-  wilcox_test(value ~ Species) 
+  rstatix::wilcox_test(value ~ Species) 
 
-overall_wilcox_tests <- data_long %>%
-  group_by(Isotope) %>%
-  wilcox_test(value ~ Species) 
+all_wilcox_eff <- data_long %>%
+  group_by(Month, Isotope) %>%
+  rstatix::wilcox_effsize(value ~ Species)
 
-# Calculate effect size (r)
-calc_r_manual <- function(df) {
-  df %>%
-    mutate(
-      N = n1 + n2,
-      Z_score = qnorm(p / 2, lower.tail = FALSE), 
-      effsize = abs(Z_score) / sqrt(N),
-      effsize = ifelse(effsize > 1, 1, effsize), 
-      effsize = round(effsize, 3) 
-    ) %>%
-    add_significance() 
-}
-
-# Apply calculation
-all_results <- all_wilcox_tests %>% 
-  calc_r_manual() %>%
+all_results <- all_wilcox_tests %>%
+  # Corrected join parameters here
+  left_join(all_wilcox_eff, by = c("Month", "Isotope", ".y.", "group1", "group2", "n1", "n2")) %>%
   mutate(Period = as.character(Month))
 
-overall_results <- overall_wilcox_tests %>% 
-  calc_r_manual() %>%
+
+# --- 2. Overall (Pooled) Tests & Effect Sizes ---
+overall_wilcox_tests <- data_long %>%
+  group_by(Isotope) %>%
+  rstatix::wilcox_test(value ~ Species) 
+
+overall_wilcox_eff <- data_long %>%
+  group_by(Isotope) %>%
+  rstatix::wilcox_effsize(value ~ Species)
+
+overall_results <- overall_wilcox_tests %>%
+  # Corrected join parameters here
+  left_join(overall_wilcox_eff, by = c("Isotope", ".y.", "group1", "group2", "n1", "n2")) %>%
   mutate(Period = "Overall")
 
-# Combine Results
+
+# --- 3. Combine Results & Format for Downstream Code ---
 full_results_df <- bind_rows(all_results, overall_results) %>%
-  select(Period, Isotope, group1, group2, statistic, p, p.signif, effsize)
+  rstatix::add_significance(p.col = "p") %>% 
+  select(Period, Isotope, group1, group2, statistic, p, p.signif, effsize) %>%
+  mutate(effsize = round(effsize, 3))
 
 # Write results to the SIA folder
 write_csv(full_results_df, file.path(sia_dir, "Isotope_Wilcoxon_Results.csv"))
@@ -157,7 +158,7 @@ write_csv(full_results_df, file.path(sia_dir, "Isotope_Wilcoxon_Results.csv"))
 
 ### Create a summary table of results for Wilcoxon tests. 
 
-These results are presented in Supplemental Table S3 in the manuscript. Note: Effect sizes are typically interpreted as small (0.1 to < 0.3), moderate (0.3 to < 0.5), and large (> 0.5).
+These results are presented in Supplemental Table S4 in the manuscript. Note: Effect sizes are typically interpreted as small (0.1 to < 0.3), moderate (0.3 to < 0.5), and large (> 0.5).
 
 ```{r Summarizing Wilcoxon test results, results='asis'}
 # This chunk uses the full_results_df created in the previous chunk
@@ -197,7 +198,7 @@ wide_results %>%
          d13C_corr_statistic, d13C_corr_effsize, d13C_corr_p, 
          d15N_statistic, d15N_effsize, d15N_p) %>%
   kbl(
-    caption = "Summary of Wilcoxon rank-sum tests and effect sizes (r). Significant p-values after Bonferroni correction are highlighted.",
+    caption = "Table S4. Summary of Wilcoxon rank-sum tests and effect sizes (r). Significant p-values after Bonferroni correction are highlighted.",
     col.names = c("Month", "W Stat", "Effect (r)", "p-value", "W Stat", "Effect (r)", "p-value"),
     digits = 3,
     escape = FALSE
@@ -288,12 +289,13 @@ col_names <- c("Month", "TA", "SEAc", "TA", "SEAc")
 ```
 
 ### Create summary table of TA and SEAc metrics
+These values contribute, in part, to table 4 in the manuscript
 
 ```{r Create table of TA and SEAc Metrics (Monthly & Overall)}
 # Create the final kable output
 metrics.wide %>%
   knitr::kable(
-    caption = "Monthly total area and SEAc values for each salmonid species", 
+    caption = "Table 4 (in part). Monthly total area and SEAc values for each salmonid species", 
     digits = 1,
     col.names = col_names #Apply the inner column names
   ) %>%
@@ -302,7 +304,8 @@ metrics.wide %>%
   column_spec(1:5, width = "2cm")
 ```
 
-### Generating stable isotope biplots for each time period. This is presented as Figure 2 in the manuscript. 
+### Generating stable isotope biplots for each time period. 
+This is presented as Figure 2 in the manuscript. 
 
 ```{r Figure 2, Generate isotope biplot, fig.width=6.5, fig.height=3.97}
 library(grid) 

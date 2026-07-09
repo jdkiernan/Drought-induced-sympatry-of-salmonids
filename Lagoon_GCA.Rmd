@@ -33,9 +33,9 @@ This document explains the analyses performed on juvenile salmonid diet (gut con
 
 rm(list=ls()) #clear environment
 
-#Install and load the necessary packages
+# Install and load the necessary packages
 
-#The following two lines are suppressed here but are needed to install the 'FSAmisc' package. #See also: https://rdrr.io/github/droglenc/FSAmisc/man/dietOverlap.html for package information.
+# The following two lines are suppressed here but are needed to install the 'FSAmisc' package. #See also: https://rdrr.io/github/droglenc/FSAmisc/man/dietOverlap.html for package information.
 
 #if (!require('devtools')) install.packages('devtools'); require('devtools')  #For 'FSAmisc' package.
 #devtools::install_github('droglenc/FSAmisc') 
@@ -52,7 +52,7 @@ library(kableExtra)
 
 
 ```{r Load data set, message=FALSE, warning=FALSE}
-#Load prey (gut content) data set  #332 rows, 26 columns
+# Load prey (gut content) data set  #332 obs, 26 vars
 
 Data.Full <- read_csv("OUT.Consumed.csv")
 
@@ -62,7 +62,7 @@ Data.Full <- read_csv("OUT.Consumed.csv")
 
 ```{r Table S2 Fish summary, message=FALSE, warning=FALSE}
 
-#Calculate summary statistics for each month separately
+# Calculate summary statistics for each month separately
 monthly_stats <- Data.Full %>%
   group_by(Month, Species) %>%
   dplyr::summarise(
@@ -277,7 +277,7 @@ knitr::kable(final_table,
 
 
 ### Create table of "overall" IRI values, sorted from highest to lowest. 
-These data are used to check against the order prey categories are presented in Figure 1.
+These data are used to check and verify the relative order prey categories are presented in Figure 1.
 
 ```{r Sorted Overall IRI Table and Export}
 # Load the taxa groupings to grab the codes
@@ -572,7 +572,7 @@ sh.plot
 ```
 
 ### Figure 1 (Combined Plot)
-Note: Figure labeling was done outside of R.```{r Combined Plot, echo=TRUE, message=FALSE, warning=FALSE, cache=TRUE, cache.path="cache/"}
+Note: Figure labeling was done outside of R.
 #Goal: to make a plot with coho on the left, SH on the right and month in the middle joining the two
 
 ```{r Combined Plot, echo=TRUE, message=FALSE, warning=FALSE, cache=TRUE, cache.path="cache/"}
@@ -797,20 +797,20 @@ schoener_values <- sapply(all_results, function(result) {
   }
 })
 
-#Create the final data frame 
+# Create the final data frame 
 overlap_summary_table <- data.frame(
   Month = names(schoener_values),
   Schoener_D = schoener_values,
   row.names = NULL #Clean up row names
 )
 
-#write_csv(overlap_summary_table, "monthly_diet_overlap_summary.csv")
+# write_csv(overlap_summary_table, "monthly_diet_overlap_summary.csv")
 ```
 
 Calculating the overall Schoener's D (all monthly data pooled) 
 
 ```{r Calculating the overall Schoeners D value}
-#The following code calculates the overall (i.e., study-wide) Schoener's D value
+# The following code calculates the overall (i.e., study-wide) Schoener's D value
 
 Overall.Guts2 <- Data.Full %>% select(8:25) 
 Overall.Guts.percent <- tran(Overall.Guts2, "percent") 
@@ -829,41 +829,42 @@ Overall.Final.df <- Overall.df[rowSums(Overall.df[2:3])>0,]
 
 DO.Overall <- dietOverlap(Overall.Final.df$Onki, Overall.Final.df$Onmy, prey=Overall.Final.df$Prey, type= "Schoener")
 
-#Capture and save output
+# Capture and save output
 output_dir <- "results/Schoener_Overlap"
 if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
 
 file_name <- file.path(output_dir, "Schoener_Overall.txt")
 
-#Wrap the summary/print in brackets to ensure ALL printing side-effects are caught
+# Wrap the summary/print in brackets to ensure ALL printing side-effects are caught
 captured_text <- capture.output({
     print(summary(DO.Overall, verbose = TRUE, digits = 2))
 })
 
 writeLines(captured_text, file_name)
 
-#Print confirmation
+# Print confirmation
 cat(paste("Saved Overall output to", file_name, "\n"))
 
-#Extract the "overall" (study-wide) Schoener's D value for the table
+# Extract the "overall" (study-wide) Schoener's D value for the table
 Overall_Schoener_D <- DO.Overall$doi
 ```
 ### Summary table of Schoener's D values
+These data contribute, in part, to Table 3 in the manuscript
 
 ```{r Creating summary table of Schoeners D values, results='asis'}
-#Create a data frame for the overall result
+# Create a data frame for the overall result
 overall_row <- data.frame(
   Month = "Overall",
   Schoener_D = Overall_Schoener_D
 )
 
-#Bind the monthly and overall results
+# Bind the monthly and overall results
 final_overlap_table <- rbind(overlap_summary_table, overall_row)
 
-#Create summary table
+# Create summary table
 final_overlap_table %>%
   knitr::kable(
-    caption = "Schoener's diet overlap (D) between coho salmon and steelhead",
+    caption = "Table 3 (in part) Schoener's diet overlap (D) between coho salmon and steelhead",
     col.names = c("Month", "Schoener's D"), #Rename columns
     digits = 2,
     format = "html"
@@ -941,11 +942,11 @@ run_monthly_indval <- function(month_abbr, full_data) {
     return(NULL) #Return NULL to skip this month
   }
   
-  #Extract only diet items
+  # Extract only diet items
   month_guts_only <- month_data[8:25]
 
-##Run Indicator Species Analysis
-  #Set seed for reproducibility
+## Run Indicator Species Analysis
+  # Set seed for reproducibility
   set.seed(123)
 
   indic_raw <- multipatt(month_guts_only, 
@@ -954,11 +955,11 @@ run_monthly_indval <- function(month_abbr, full_data) {
                         duleg = TRUE, 
                         control = how(nperm = 9999))
   
-  #Return the result object
+  # Return the result object
   return(indic_raw)
 }
 
-#Run the analysis for all (seven) months of the study
+# Run the analysis for all (seven) months of the study
 all_indval_results <- lapply(months_to_analyze, 
                              FUN = run_monthly_indval, 
                              full_data = Fish.Guts.All.Prey)
@@ -1043,7 +1044,7 @@ final_indicators_table %>%
     # Predator = ifelse(Predator == "Onki", "Coho", "Steelhead") 
   ) %>% 
   knitr::kable(
-    caption = "Table 3. Diet indicator values (IndVal) by month, derived from the stomach contents of lagoon-rearing juvenile coho salmon and steelhead",
+    caption = "Table 2. Diet indicator values (IndVal) by month, derived from the stomach contents of lagoon-rearing juvenile coho salmon and steelhead",
     col.names = c("Month", "Predator", "Prey category", "A", "B", "IndVal", "p-Value"),
     # Digits: A, B, Stat = 2 decimals; P-value = 3 decimals
     digits = c(0, 0, 0, 2, 2, 2, 3), 
