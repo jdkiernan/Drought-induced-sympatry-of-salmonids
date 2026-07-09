@@ -870,70 +870,6 @@ Here we make an alternative figure to the SIBER DENSITY PLOT that illustrates th
 
 ```{r Figure 3, echo=TRUE, message=FALSE, warning=FALSE}
 
-library(egg)
-library(gridExtra)
-library(tidybayes)
-library(dplyr) 
-
-# Pre-calculate the credible intervals using tidybayes
-ci_95 <- SEA.B.3 %>% group_by(Month, Species) %>% mean_qi(value, .width = 0.95)
-ci_75 <- SEA.B.3 %>% group_by(Month, Species) %>% mean_qi(value, .width = 0.75)
-ci_50 <- SEA.B.3 %>% group_by(Month, Species) %>% mean_qi(value, .width = 0.50)
-
-# Build the plot with stacked crossbars
-Diet.breadth.plot <- ggplot() +
-  # 95% Credible Interval (alpha removed, boxes are solid)
-  geom_crossbar(data = ci_95, aes(x = Species, y = value, ymin = .lower, ymax = .upper, fill = Species),
-                width = 0.15, color = "black", fatten = 0) +
-  # 75% Credible Interval 
-  geom_crossbar(data = ci_75, aes(x = Species, y = value, ymin = .lower, ymax = .upper, fill = Species),
-                width = 0.25, color = "black", fatten = 0) +
-  # 50% Credible Interval 
-  geom_crossbar(data = ci_50, aes(x = Species, y = value, ymin = .lower, ymax = .upper, fill = Species),
-                width = 0.50, color = "black", fatten = 0) +
-  # Add the mean as a black point
-  geom_point(data = ci_50, aes(x = Species, y = value), size = 1.2, color = "black") +
-  scale_fill_manual(values = c("Onki" = "#EAAF80", "Onmy" = "#80B9D9")) +
-  labs(y = expression("Dietary niche breadth " (SEA[b], '\u2030' ^2)), x = "Salmonid species") +
-  facet_wrap(~Month, ncol = 8) +
-  scale_y_continuous(limits = c(0, 7.5), breaks = seq(0, 8, 1)) +
-  theme_bw() +
-  theme(
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    legend.position = "none",
-    
-    panel.spacing = unit(0.5, "lines"),
-    axis.title.y = element_text(family = "serif", size = 10), 
-    axis.title.x = element_text(family = "serif", size = 10, margin = margin(t = 7)), 
-    
-    axis.text.y = element_text(family = "serif", size = 9, color = "black"),
-    axis.text.x = element_text(family = "serif", size = 8, color = "black"), 
-    
-    strip.background = element_blank(), 
-    strip.text = element_blank()
-  )
-
-my_tag1 <- c("(a) Jun", "(b) Jul","(c) Aug","(d) Sep","(e) Oct","(f) Nov","(g) Dec","(h) Overall")
-
-Diet.breadth.plot <- tag_facet(Diet.breadth.plot, 
-          x = -Inf, y = Inf,
-          vjust = 1.5, hjust = -0.10,
-          open = "", close = "",
-          fontface = 1,
-          # NEW: Drop tag size from 3.2 down to 2.8
-          size = 2.8, 
-          
-          tag_pool = my_tag1)
-
-Diet.breadth.plot
-
-ggsave(file.path(sia_dir, "Figure_3.pdf"), width = 6.5, height = 3.97, units = "in", dpi = 800, device = quartz)
-
-ggsave(file.path(sia_dir, "Figure_3.tif"), width = 6.5, height = 3.97, units = "in", dpi = 800, device = "tiff", compression = "lzw")
-```
-```{r Figure 3 version 2, echo=TRUE, message=FALSE, warning=FALSE}
-
 library(patchwork)
 library(grid)
 library(tidybayes)
@@ -1012,9 +948,9 @@ Diet.breadth.plot <- (wrap_elements(y_grob) + main_grid + plot_layout(widths = c
 Diet.breadth.plot
 
 
-ggsave(file.path(sia_dir, "Figure_3v2.pdf"), width = 6.5, height = 3.97, units = "in", dpi = 800, device = quartz)
+ggsave(file.path(sia_dir, "Figure_3.pdf"), width = 6.5, height = 3.97, units = "in", dpi = 800, device = quartz)
 
-ggsave(file.path(sia_dir, "Figure_3v2.tif"), width = 6.5, height = 3.97, units = "in", dpi = 800, device = "tiff", compression = "lzw")
+ggsave(file.path(sia_dir, "Figure_3.tif"), width = 6.5, height = 3.97, units = "in", dpi = 800, device = "tiff", compression = "lzw")
 ```
 Figure 3 legend: Estimates of dietary niche breadth (‰^2) for juvenile coho salmon (*Oncorhynchus kisutch*; Onki) and steelhead (*O. mykiss*; Onmy) captured in the Scott Creek lagoon. Species-specific estimates were generated for each month of the study (panels a–g) and an overall estimate (h) was produced from pooled data (all months combined) using posterior estimates of Bayesian standard ellipse areas (SEAb). Black dots represent the mean SEAb value after 10,000 iterations and box widths from wide to narrow represent 50, 75, and 95% credible intervals. 
 
