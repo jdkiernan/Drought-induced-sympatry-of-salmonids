@@ -709,7 +709,7 @@ The above data are not included in the manuscript but confirm that the isotopic 
 
 Note: this chunk of code is very slow to run
 
-```{r Determining monthly and overall overlap in SIBER}
+```{r Determining monthly and overall overlap in SIBER, cache=TRUE}
 
 set.seed(2564)
 #Define the ellipses:
@@ -1064,7 +1064,7 @@ nsamples <- 1000 #Number of posterior samples
 
 The following chunk loops through each period, subsets the data, runs the `nicheROVER` analysis, saves all CSV and plot outputs, and stores the `ggplot` object for the final panel (figure 4 in the manuscript).
 
-```{r Main nicheROVER analysis loop}
+```{r Main nicheROVER analysis loop, warning=FALSE, message=FALSE, cache=TRUE}
 
 for (period in periods) {
   
