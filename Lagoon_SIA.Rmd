@@ -48,8 +48,27 @@ This data set includes only age-1+ (yearling) coho salmon and steelhead. Carbon 
 ```{r Load full isotope data}
 
 # Create universal input and output directories
-input_dir <- "SIA_Input_Data"
-sia_dir <- "SIA_Output"
+input_dir <- "Lagoon_SIA_Input_Data"
+sia_dir <- "Lagoon_SIA_Results"
+
+if (!dir.exists(input_dir)) {
+  dir.create(input_dir)
+}
+
+# Create Results Directory and Analysis Subfolders
+output_dirs <- c(
+  sia_dir,
+  file.path(sia_dir, "SIBER"),
+  file.path(sia_dir, "NicheROVER"),
+  file.path(sia_dir, "Figures"),
+  file.path(sia_dir, "Tables")
+)
+
+for (dir in output_dirs) {
+  if (!dir.exists(dir)) {
+    dir.create(dir, recursive = TRUE)
+  }
+}
 
 if (!dir.exists(sia_dir)) {
   dir.create(sia_dir)
@@ -83,7 +102,10 @@ isotope.fish.summary<-ddply(data, c("Month", "Species"), summarise,
 
 colnames(isotope.fish.summary) <- c ("Month", "Salmonid species", "N", "Mean", "SD", "Mean", "SD", "C-Range", "Mean", "SD", "N-Range")
 
-# Create the table with corrected headers and collapsed rows
+# Export the summary table to the Tables folder
+write.csv(isotope.fish.summary, file.path(sia_dir, "Tables", "Isotope_Fish_Summary.csv"), row.names = FALSE)
+
+# Create a kable with corrected headers and collapsed rows
 isotope.fish.summary %>%
   kbl(caption = "Summary of monthly carbon and nitrogen stable isotope ratios for lagoon-rearing coho salmon (Onki) and steelhead (Onmy). These data appear, in part, in Table 4 of the manuscript") %>%
   kable_classic(font = "Cambria") %>%
@@ -152,7 +174,7 @@ full_results_df <- bind_rows(all_results, overall_results) %>%
   mutate(effsize = round(effsize, 3))
 
 # Write results to the SIA folder
-write_csv(full_results_df, file.path(sia_dir, "Isotope_Wilcoxon_Results.csv"))
+write_csv(full_results_df, file.path(sia_dir, "Tables", "Isotope_Wilcoxon_Results.csv"))
 ```
 
 ### Summary table of results for Wilcoxon tests. 
@@ -190,8 +212,8 @@ wide_results$d15N_p <- cell_spec(
   color = ifelse(wide_results$d15N_p < 0.006, "#D55E00", "black")
 )
 
-# Create summary table
-wide_results %>%
+# Create summary table and assign it to an object
+wilcoxon_table_out <- wide_results %>%
   select(Month, 
          d13C_corr_statistic, d13C_corr_effsize, d13C_corr_p, 
          d15N_statistic, d15N_effsize, d15N_p) %>%
@@ -205,6 +227,12 @@ wide_results %>%
   add_header_above(c(" " = 1, "$\\delta^{13}$C ($\\unicode{x2030}$)" = 3, "$\\delta^{15}$N ($\\unicode{x2030}$)" = 3)) %>%
   column_spec(1, width = "2cm") %>%     
   column_spec(2:7, width = "2.0cm")
+
+# Save the fully formatted table
+save_kable(wilcoxon_table_out, file = file.path(sia_dir, "Tables", "Table_S4_Wilcoxon_Formatted.html"))
+
+# Print the table to the document
+wilcoxon_table_out
 ```
 
 ## Calculate total area (TA) and standard ellipse area corrected for small sample size (SEAc).
@@ -219,8 +247,8 @@ library(tidyr)
 library(tibble)
 
 # Re-add directory paths after the environment wipe
-input_dir <- "SIA_Input_Data"
-sia_dir <- "SIA_Output"
+input_dir <- "Lagoon_SIA_Input_Data"
+sia_dir <- "Lagoon_SIA_Results"
 
 if (!dir.exists(sia_dir)) {
   dir.create(sia_dir)
@@ -270,8 +298,8 @@ metrics.table <- as.data.frame(t(combined.metrics)) %>%
                                           "Oct","Nov","Dec","Overall"))) %>%
   arrange(Month, Species)
 
-# Save this table to the SIA_Output directory:
-write.csv(metrics.table, file.path(sia_dir, "siber_metrics_summary.csv"), row.names = FALSE)
+# Save this table to the Lagoon_SIA_Results directory:
+write.csv(metrics.table, file.path(sia_dir, "SIBER", "SIBER_Metrics_Summary.csv"), row.names = FALSE)
 
 metrics.wide <- metrics.table %>%
   # Select columns needed
@@ -292,8 +320,8 @@ col_names <- c("Month", "TA", "SEAc", "TA", "SEAc")
 These values contribute, in part, to table 4 in the manuscript
 
 ```{r Create table of TA and SEAc Metrics (Monthly & Overall)}
-# Create the final kable output
-metrics.wide %>%
+# Create the final kable output and assign it to an object
+TA_SEAc_table_out <- metrics.wide %>%
   knitr::kable(
     caption = "Table 4 (in part). Monthly total area and SEAc values for each salmonid species", 
     digits = 1,
@@ -302,6 +330,12 @@ metrics.wide %>%
   kable_classic(font = "Cambria", full_width = FALSE) %>%
   add_header_above(c(" " = 1, "Coho Salmon" = 2, "Steelhead" = 2)) %>% 
   column_spec(1:5, width = "2cm")
+
+# Save the fully formatted table to the Tables folder
+save_kable(TA_SEAc_table_out, file = file.path(sia_dir, "Tables", "Table_4_TA_SEAc_Formatted.html"))
+
+# Print the table to the document
+TA_SEAc_table_out
 ```
 
 ### Generating stable isotope biplots for each time period. 
@@ -400,9 +434,12 @@ final_siber_panel <- (wrap_elements(y_grob) + main_grid + plot_layout(widths = c
 
 final_siber_panel
 
-ggsave(file.path(sia_dir, "Figure_2.pdf"), width = 6.5, height = 3.97, units = "in", dpi = 800, 
+ggsave(file.path(sia_dir, "Figures", "Figure_2.pdf"), 
+       width = 6.5, height = 3.97, units = "in", dpi = 800, 
        device = function(file, ...) quartz(file = file, type = "pdf", ...))
-ggsave(file.path(sia_dir, "Figure_2.tif"), width = 6.5, height = 3.97, units = "in", dpi = 800, device = "tiff", compression = "lzw")
+ggsave(file.path(sia_dir, "Figures", "Figure_2.tif"), 
+       width = 6.5, height = 3.97, units = "in", dpi = 800, 
+       device = "tiff", compression = "lzw")
 ```
 
 Figure 2. Caption:
@@ -443,7 +480,7 @@ Here is a preliminary look at the distribution of ellipses for each population a
 # Save current settings
 op <- par(no.readonly = TRUE)
 
-#Set the global axis text size before the plot function
+# Set the global axis text size before the plot function
 par(cex.axis = 0.7) 
 
 # SEA.B <- siberEllipses(ellipses.posterior)
@@ -469,7 +506,7 @@ siberDensityPlot(
 # Restore original settings
 par(op)
 
-#To add red x's for the ML estimated SEAc
+# The nfollowing line will add red x's for the ML estimated SEAc, if desired
 #points(1:ncol(SEA.B), group.ML.monthly[3,], col="red", pch = "x", lwd = 2)
 ```
 
@@ -497,20 +534,18 @@ SEA.B.modes <- lapply(
   prob = cr.p, all.modes = T) #vectors of the modes for each group's SEA.b
 #SEA.B.modes
 
-#Call to hdrcde:hdr using lapply()
+# Call to hdrcde:hdr using lapply()
 SEA.B.credibles <- lapply(
   as.data.frame(SEA.B), 
   function(x,...){tmp <- hdrcde::hdr(x)$hdr},
   prob = cr.p) #vectors of the credible intervals for each group's SEA.b
 #SEA.B.credibles
 
-#Save this output to the SIBER_Output directory
-write.table(SEA.B.modes, 
-            file = file.path(sia_dir, "SEAb_Modes.csv"), 
+# Save this output to the SIBER_Output directory
+write.table(SEA.B.modes, file = file.path(sia_dir, "SIBER", "SEAb_Modes.csv"), 
             append = F, sep = ',', row.names = T, col.names = NA)
 
-write.table(SEA.B.credibles, 
-            file = file.path(sia_dir, "SEAb_Credible_Intervals.csv"), 
+write.table(SEA.B.credibles, file = file.path(sia_dir, "SIBER", "SEAb_Credible_Intervals.csv"), 
             append = F, sep = ',', row.names = T, col.names = NA)
 ```
 
@@ -518,7 +553,7 @@ Although SIBER has a built-in SEAb plot (Siber.density.plot, created above), we 
 
 ```{r Draw SEA.B posteriors, echo=TRUE, message=TRUE, warning=TRUE, cache=TRUE}
 
-#Draw posteriors for SIBER ellipse area for each "species.month" combination
+# Draw posteriors for SIBER ellipse area for each "species.month" combination
 SEA.B.2 <- SEA.B 
 colnames(SEA.B.2) <- colnames(group.ML.monthly) 
 SEA.B.2 <- as.data.frame(SEA.B.2) 
@@ -612,30 +647,28 @@ siberDensityPlot(
 
 
 ```{r Examining the "Overall" SEA.B credible intervals}
-#Examining the SEA.B credible intervals 
+# Examining the SEA.B credible intervals 
 cr.p <- c(0.50, 0.75, 0.95) # vector of quantiles
 
-#Calculate modes and credible intervals of SEA.B
+# Calculate modes and credible intervals of SEA.B
 SEA.B.overall.modes <- lapply(
   as.data.frame(SEA.B.overall), 
   function(x,...){tmp <- hdrcde::hdr(x)$mode},
   prob = cr.p, all.modes = T) #vectors of the modes for each group's SEA.b
 #SEA.B.overall.modes
 
-#Call to hdrcde:hdr using lapply()
+# Call to hdrcde:hdr using lapply()
 SEA.B.overall.credibles <- lapply(
   as.data.frame(SEA.B.overall), 
   function(x,...){tmp <- hdrcde::hdr(x)$hdr},
   prob = cr.p) #vectors of the credible intervals for each group's SEA.b
 #SEA.B.overall.credibles
 
-#Save this output to the SIBER_Output directory
-write.table(SEA.B.overall.modes, 
-            file = file.path(sia_dir, "SEAb_Overall_Modes.csv"), 
+# Save this output to the SIBER_Output directory
+write.table(SEA.B.overall.modes, file = file.path(sia_dir, "SIBER", "SEAb_Overall_Modes.csv"), 
             append = F, sep = ',', row.names = T, col.names = NA)
 
-write.table(SEA.B.overall.credibles, 
-            file = file.path(sia_dir, "SEAb_Overall_Credible_Intervals.csv"), 
+write.table(SEA.B.overall.credibles, file = file.path(sia_dir, "SIBER", "SEAb_Overall_Credible_Intervals.csv"), 
             append = F, sep = ',', row.names = T, col.names = NA)
 ```
 
@@ -643,10 +676,10 @@ Here we combine SEA.B (monthly) and SEA.B.overall into SEA.B.full
 
 ```{r Create SEA.B.full which combines monthly and overall estimates, echo=TRUE, message=TRUE, warning=TRUE}
 
-#Combination of monthly (SEA.B) and overall (SEA.B.overall) results into a full matrix
+# Combination of monthly (SEA.B) and overall (SEA.B.overall) results into a full matrix
 SEA.B.full <- cbind(SEA.B, SEA.B.overall)
 
-#Define the *exact* column names for the combined matrix
+# Define the *exact* column names for the combined matrix
 full_col_names <- c('Jun.Onki', 'Jun.Onmy',
                     'Jul.Onki', 'Jul.Onmy',
                     'Aug.Onki', 'Aug.Onmy',
@@ -700,15 +733,13 @@ prob_summary_df %>%
   kable_classic(font = "Cambria", full_width = FALSE) %>%
 
   add_header_above(c(" " = 1, "Pr(SEAb Onki < SEAb Onmy)" = 1))
-
 ```
 
 The above data are not included in the manuscript but confirm that the isotopic niche breadth of lagoon-rearing steelhead (Onmy) was generally greater than that of coho salmon (Onki).
 
 ### Determining monthly and overall overlap in SIBER
 
-Note: this chunk of code is very slow to run
-
+Note: this chunk of code is very slow to run.
 ```{r Determining monthly and overall overlap in SIBER, cache=TRUE}
 
 set.seed(2564)
@@ -822,13 +853,13 @@ The above plot is not included in the manuscript but is useful to explore the da
 
 df <- as.data.frame(bayes.95.overlap.plotting)
 
-#Calculate the mean for each column (Month and Overall)
+# Calculate the mean for each column (Month and Overall)
 all_means <- sapply(df, mean, na.rm = TRUE)
 
-#Calculate the median for each column (Month and Overall)
+# Calculate the median for each column (Month and Overall)
 all_medians <- sapply(df, median, na.rm = TRUE)
 
-#Find the peak of the density (the "mode") for each column (Month and Overall)
+# Find the peak of the density (the "mode") for each column (Month and Overall)
 get_density_peak <- function(x, na.rm = TRUE) {
   if (na.rm) {
     x <- na.omit(x)
@@ -836,16 +867,16 @@ get_density_peak <- function(x, na.rm = TRUE) {
   if (length(x) == 0) {
     return(NA)
   }
-#Create density estimate
+# Create density estimate
   d <- density(x)
-#Return the 'x' value that has the highest 'y' value (the peak of ther distribution)
+# Return the 'x' value that has the highest 'y' value (the peak of ther distribution)
   return(d$x[which.max(d$y)])
 }
 
-#Apply this function to every column
+# Apply this function to every column
 all_modes <- sapply(df, get_density_peak)
 
-#Create the final table
+# Create the final table
 results_table <- data.frame(
   Mean = all_means,
   Median = all_medians,
@@ -862,7 +893,7 @@ final_overlap_stats <- results_table %>%
   rownames_to_column(var = "Month")
 
 # Export the clean data frame to your centralized output folder
-write.csv(final_overlap_stats, file.path(sia_dir, "SEAb_Posterior_Overlap_Stats.csv"), row.names = FALSE)
+write.csv(final_overlap_stats, file.path(sia_dir, "SIBER", "SEAb_Posterior_Overlap_Stats.csv"), row.names = FALSE)
 
 # Generate the HTML table for the document
 final_overlap_stats %>%
@@ -955,9 +986,12 @@ Diet.breadth.plot <- (wrap_elements(y_grob) + main_grid + plot_layout(widths = c
 
 Diet.breadth.plot
 
-ggsave(file.path(sia_dir, "Figure_3.pdf"), width = 6.5, height = 3.97, units = "in", dpi = 800, 
+ggsave(file.path(sia_dir, "Figures", "Figure_3.pdf"), 
+       width = 6.5, height = 3.97, units = "in", dpi = 800, 
        device = function(file, ...) quartz(file = file, type = "pdf", ...))
-ggsave(file.path(sia_dir, "Figure_3.tif"), width = 6.5, height = 3.97, units = "in", dpi = 800, device = "tiff", compression = "lzw")
+ggsave(file.path(sia_dir, "Figures", "Figure_3.tif"), 
+       width = 6.5, height = 3.97, units = "in", dpi = 800, 
+       device = "tiff", compression = "lzw")
 ```
 Figure 3 legend: 
 Estimates of dietary niche breadth (‰^2) for juvenile coho salmon (*Oncorhynchus kisutch*; Onki) and steelhead (*O. mykiss*; Onmy) captured in the Scott Creek lagoon. Species-specific estimates were generated for each month of the study (panels a–g) and an overall estimate (h) was produced from pooled data (all months combined) using posterior estimates of Bayesian standard ellipse areas (SEAb). Black dots represent the mean SEAb value after 10,000 iterations and box widths from wide to narrow represent 50, 75, and 95% credible intervals. 
@@ -996,7 +1030,7 @@ verification_table <- SEA.B.3 %>%
   mutate(across(where(is.numeric), ~ round(.x, 2)))
 
 # Export the table to the SIA folder
-write.csv(verification_table, file.path(sia_dir, "QC_Data_Validation.csv"), row.names = FALSE)
+write.csv(verification_table, file.path(sia_dir, "SIBER", "QC_Data_Validation.csv"), row.names = FALSE)
 
 # Print the verification table
 verification_table %>%
@@ -1008,8 +1042,7 @@ verification_table %>%
   add_header_above(c(" " = 2, "Central Tendencies" = 3, "50% CrI" = 2, "75% CrI" = 2, "95% CrI" = 2))
 ```
 
-
-##nicheROVER - Isotopic niche overlap
+##NicheROVER - Determining isotopic niche overlap
           
 ```{r nicheROVER setup, include=FALSE}
 
@@ -1033,8 +1066,8 @@ library(patchwork)
 library(kableExtra) 
 
 # Re-add directory paths after the environment wipe
-input_dir <- "SIA_Input_Data"
-sia_dir <- "SIA_Output"
+input_dir <- "Lagoon_SIA_Input_Data"
+sia_dir <- "Lagoon_SIA_Results"
 if (!dir.exists(sia_dir)) {
   dir.create(sia_dir)
 }
@@ -1045,7 +1078,7 @@ summary_stats_list <- list() #To store table data
 tryCatch({
   Fish.isotope.data <- read.csv(file.path(input_dir, "lagoon_fish_isotope.csv"), header = T)
 }, error = function(e) {
-  stop("Failed to read 'lagoon_fish_isotope.csv'. Make sure the file is in the 'SIA_Input_Data' directory.")
+  stop("Failed to read 'lagoon_fish_isotope.csv'. Make sure the file is in the 'Lagoon_SIA_Input_Data' directory.")
 })
 
 # Define analysis time periods
@@ -1117,12 +1150,16 @@ for (period in periods) {
   cat("Mean Overlap (%):\n")
   print(round(over.mean, 2)) # Show 95%
   
-  write.table(over.mean, file = file.path(sia_dir, paste0("Rover_Overlap_", period, ".csv")), append = F, sep = ',', row.names = T, col.names = NA)
+  write.table(over.mean, file = file.path(sia_dir, "NicheROVER", 
+              paste0("Rover_Overlap_", period, ".csv")), 
+              append = F, sep = ',', row.names = T, col.names = NA)
   
 # Calculate and save credible intervals
   over.cred <- apply(over.stat * 100, c(1:2, 4), quantile, prob = c(.025, .975), na.rm = TRUE)
   
-  write.table(over.cred, file = file.path(sia_dir, paste0("Rover_Cred_", period, ".csv")), append = F, sep = ',', row.names = T, col.names = NA)
+write.table(over.cred, file = file.path(sia_dir, "NicheROVER", 
+            paste0("Rover_Cred_", period, ".csv")), 
+            append = F, sep = ',', row.names = T, col.names = NA)
   
 # Niche size calculation
 # Posterior distribution of niche size
@@ -1130,7 +1167,9 @@ for (period in periods) {
     apply(spec$Sigma, 3, niche.size, alpha = .95)
   })
   
-  write.table(fish.size, file = file.path(sia_dir, paste0("Rover_Niche_Size_", period, ".csv")), append = F, sep = ',', row.names = T, col.names = NA)
+write.table(fish.size, file = file.path(sia_dir, "NicheROVER", 
+            paste0("Rover_Niche_Size_", period, ".csv")), 
+            append = F, sep = ',', row.names = T, col.names = NA)
   
 # Point estimate and standard error
   cat("Niche Size (est & se):\n")
@@ -1141,8 +1180,7 @@ for (period in periods) {
   size_est <- colMeans(fish.size)
   size_se <- apply(fish.size, 2, sd)
   
-#Niche overlap (95%)
-# over.mean array is [Species A, Species B, Alpha]
+# Niche overlap (95%) - over.mean array is [Species A, Species B, Alpha]
   onki_on_onmy <- over.mean[1, 2, 1] # [Onki, Onmy, 95%]
   onmy_on_onki <- over.mean[2, 1, 1] # [Onmy, Onki, 95%]
 
@@ -1175,7 +1213,7 @@ for (period in periods) {
   summary_stats_list[[period]] <- period_stats
   
 # Save the standard nicheROVER plots to a PDF for diagnostics
-  pdf(file = file.path(sia_dir, paste0(period, "_nicheROVER_base_plots.pdf")), width = 7, height = 6)
+  pdf(file = file.path(sia_dir, "NicheROVER", paste0(period, "_nicheROVER_base_plots.pdf")), width = 7, height = 6)
   
 # Parameter plots
   par(mar = c(4, 4, .5, .1) + .1, mfrow = c(1, 3))
@@ -1341,7 +1379,7 @@ col_names <- c("Month",
 # Create a copy for export, apply the clean column names, and save as .csv
 export_table <- summary_table_formatted
 colnames(export_table) <- col_names
-write.csv(export_table, file.path(sia_dir, "NicheROVER_Summary_Table.csv"), row.names = FALSE)
+write.csv(export_table, file.path(sia_dir, "Tables", "NicheROVER_Overlap_Summary_Table.csv"), row.names = FALSE)
 
 # Generate the HTML table for the document
 kbl(summary_table_formatted, 
@@ -1393,10 +1431,13 @@ if (length(plot_list) == length(periods)) {
   
   print(final_panel)
 
-  # Output
-  ggsave(file.path(sia_dir, "Figure_4.pdf"), width = 6.5, height = 3.97, units = "in", dpi = 800, 
+# Output
+ggsave(file.path(sia_dir, "Figures", "Figure_4.pdf"), 
+       width = 6.5, height = 3.97, units = "in", dpi = 800, 
        device = function(file, ...) quartz(file = file, type = "pdf", ...))
-  ggsave(file.path(sia_dir, "Figure_4.tif"), width = 6.5, height = 3.97, units = "in", dpi = 800, device = "tiff", compression = "lzw")
+ggsave(file.path(sia_dir, "Figures", "Figure_4.tif"), 
+       width = 6.5, height = 3.97, units = "in", 
+       dpi = 800, device = "tiff", compression = "lzw")
   
 } else {
   print("Skipped panel plot generation because one or more periods failed.")

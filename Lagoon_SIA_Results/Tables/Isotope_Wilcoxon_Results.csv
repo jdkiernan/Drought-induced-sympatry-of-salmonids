@@ -1,0 +1,17 @@
+Period,Isotope,group1,group2,statistic,p,p.signif,effsize
+Jun,d13C_corr,Onki,Onmy,1346,0.006932146992149502,**,0.282
+Jun,d15N,Onki,Onmy,1170,0.1963428264800815,ns,0.135
+Jul,d13C_corr,Onki,Onmy,514,0.4088424962450624,ns,0.106
+Jul,d15N,Onki,Onmy,696,3.800272490256968e-4,***,0.44
+Aug,d13C_corr,Onki,Onmy,171,0.10117123772585955,ns,0.23
+Aug,d15N,Onki,Onmy,223,1.515991011789331e-4,***,0.454
+Sep,d13C_corr,Onki,Onmy,593,0.007964601923596604,**,0.314
+Sep,d15N,Onki,Onmy,808,1.112379410805886e-8,****,0.674
+Oct,d13C_corr,Onki,Onmy,737,5.049608693785679e-5,****,0.466
+Oct,d15N,Onki,Onmy,865,8.000759166293392e-9,****,0.662
+Nov,d13C_corr,Onki,Onmy,503,0.2452000867324995,ns,0.139
+Nov,d15N,Onki,Onmy,779,4.4228056794715087e-7,****,0.6
+Dec,d13C_corr,Onki,Onmy,274,0.2614754601148963,ns,0.136
+Dec,d15N,Onki,Onmy,411,1.2019875840230121e-4,***,0.464
+Overall,d13C_corr,Onki,Onmy,30108,5.600369057390253e-10,****,0.279
+Overall,d15N,Onki,Onmy,34864,0,****,0.439
