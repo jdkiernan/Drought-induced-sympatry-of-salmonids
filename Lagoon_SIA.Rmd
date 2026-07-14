@@ -43,7 +43,17 @@ library(coin)
 ```
 Data file: "Lagoon_fish_isotope.csv". 
 
-This data set includes only age-1+ (yearling) coho salmon and steelhead. Carbon stable isotope values (header "d13C_corr") are lipid corrected values; we mathematically lipid-corrected all fin clips with a C:N ratio > 3.5 (n = 77; 15.6% of the samples). Specifically, we followed the recommendation of Skinner et al. (2016) and applied the nonlinear normalization model developed by Kiljunen et al. (2006) with the Post et al. (2007) percentage lipid calculation. See methods section of manuscript for additional details.
+This data set includes only age-1+ (yearling) coho salmon and steelhead. Carbon stable isotope values (header "d13C_corr") are lipid corrected values; we mathematically lipid-corrected all fin clips with a C:N ratio > 3.5 (n = 77; 15.6% of the samples). Specifically, we followed the recommendation of Skinner et al. (2016) and applied the nonlinear normalization model developed by Kiljunen et al. (2006) with the Post et al. (2007) percentage lipid calculation. 
+
+1. Percentage Lipid Calculation (Post et al. 2007) utilizes the linear relationship between C:N and lipid content ($L$) proposed for aquatic animals:
+$$L = -20.54 + (7.24 \times C:N)$$ 
+
+2. Nonlinear Normalization Model (Kiljunen et al. 2006) takes that $L$ value and applies the modified parameters ($D = 7.018$ and $I = 0.048$) to the McConnaughey & McRoy (1979) equation to calculate the isotopic shift: 
+($\Delta\delta^{13}C$):$$\Delta\delta^{13}C = 7.018 \times \left(0.048 + \frac{3.90}{1 + 287 / L}\right)$$
+
+3. Final Correction
+$$\delta^{13}C_{corr} = \delta^{13}C_{raw} + \Delta\delta^{13}C$$
+This (\delta^{13}C_{corr}) is the data pipeline that is used in the analysis. See methods section of manuscript for additional details.
 
 ```{r Load full isotope data}
 
