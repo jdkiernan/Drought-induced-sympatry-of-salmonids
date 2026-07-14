@@ -53,7 +53,7 @@ $$L = -20.54 + (7.24 \times C:N)$$
 
 3. Final Correction
 $$\delta^{13}C_{corr} = \delta^{13}C_{raw} + \Delta\delta^{13}C$$
-This (\delta^{13}C_{corr}) is the data pipeline that is used in the analysis. See methods section of manuscript for additional details.
+This variable ($\delta^{13}C_{corr}$) is used in all subsequent analyses. See methods section of manuscript for additional details.
 
 ```{r Load full isotope data}
 

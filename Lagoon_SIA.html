@@ -3001,8 +3001,20 @@ corrected values; we mathematically lipid-corrected all fin clips with a
 C:N ratio &gt; 3.5 (n = 77; 15.6% of the samples). Specifically, we
 followed the recommendation of Skinner et al. (2016) and applied the
 nonlinear normalization model developed by Kiljunen et al. (2006) with
-the Post et al. (2007) percentage lipid calculation. See methods section
-of manuscript for additional details.</p>
+the Post et al. (2007) percentage lipid calculation.</p>
+<ol style="list-style-type: decimal">
+<li><p>Percentage Lipid Calculation (Post et al. 2007) utilizes the
+linear relationship between C:N and lipid content (<span class="math inline">\(L\)</span>) proposed for aquatic animals: <span class="math display">\[L = -20.54 + (7.24 \times C:N)\]</span></p></li>
+<li><p>Nonlinear Normalization Model (Kiljunen et al. 2006) takes that
+<span class="math inline">\(L\)</span> value and applies the modified
+parameters (<span class="math inline">\(D = 7.018\)</span> and <span class="math inline">\(I = 0.048\)</span>) to the McConnaughey &amp;
+McRoy (1979) equation to calculate the isotopic shift: (<span class="math inline">\(\Delta\delta^{13}C\)</span>):<span class="math display">\[\Delta\delta^{13}C = 7.018 \times \left(0.048 +
+\frac{3.90}{1 + 287 / L}\right)\]</span></p></li>
+<li><p>Final Correction <span class="math display">\[\delta^{13}C_{corr}
+= \delta^{13}C_{raw} + \Delta\delta^{13}C\]</span> This variable (<span class="math inline">\(\delta^{13}C_{corr}\)</span>) is used in all
+subsequent analyses. See methods section of manuscript for additional
+details.</p></li>
+</ol>
 <pre class="r"><code># Create universal input and output directories
 input_dir &lt;- &quot;Lagoon_SIA_Input_Data&quot;
 sia_dir &lt;- &quot;Lagoon_SIA_Results&quot;

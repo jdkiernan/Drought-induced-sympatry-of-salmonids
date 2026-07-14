@@ -354,34 +354,173 @@ display: none;
 
 <div id="drought-induced-sympatry-of-salmonids" class="section level1">
 <h1>Drought-induced-sympatry-of-salmonids</h1>
-<p>Code for manuscript, “Drought-induced sympatry of two salmonid
-species: Feeding ecology and trophic niches of potential competitors” by
-Kiernan et al. </p>
-<p>Files Descriptions:</p>
+<p>Code and data repository for the manuscript: <strong>“Drought-induced
+sympatry of two salmonid species: Feeding ecology and trophic niches of
+potential competitors”</strong> by Kiernan et al.</p>
+<p>Questions regarding these analyses, data structures, or the R
+Markdown scripts should be directed to Dr. Joseph Kiernan at <a href="mailto:joseph.kiernan@noaa.gov" class="email">joseph.kiernan@noaa.gov</a>.</p>
+<hr />
+<div id="repository-structure-file-descriptions" class="section level2">
+<h2>Repository Structure &amp; File Descriptions</h2>
+<div id="analysis-scripts" class="section level3">
+<h3>Analysis Scripts</h3>
 <ul>
-<li>The “Lagoon_GCA.Rmd” is a markdown script that contains all of the
-analyses for the juvenile salmonid diet samples.</li>
-<li>The “Lagoon_SIA.Rmd” is a markdown script that contains all of the
-analyses for the juvenile salmonid isotope samples</li>
+<li><code>Lagoon_SIA.Rmd</code>: R Markdown script containing all
+analysis workflows for natural abundance stable isotope data <span class="math inline">\(\delta^{13}\text{C}\)</span> and <span class="math inline">\(\delta^{15}\text{N}\)</span>.</li>
+<li><code>Lagoon_GCA.Rmd</code>: R Markdown script containing all
+analysis workflows for juvenile salmonid diet (stomach/gut content)
+data.</li>
 </ul>
-<p>Datafiles called by the scripts:</p>
+</div>
+<div id="raw-data-files-or-root-input-directories" class="section level3">
+<h3>Raw Data Files (<code>/</code> or Root Input Directories)</h3>
 <ul>
-<li>The “Consumed.csv” datafile contains the count data for prey items
-found in each fish’s diet during each sampling event.</li>
-<li>The datafile “TaxaGroupings.csv” included prey items and composite
-prey categories used for labeling the figures (see Table 1 in the
-manuscript).</li>
-<li>The “IRI_input.csv” and “IRI_input_entirestudy.csv” datafiles are
-used to calulate the Index of Relative Importance (IRI) for each species
-and month and the overall (entire study period combined) respectively
-with the DietR package.</li>
-<li>The “DietR_Sankey_Coho.csv”, “DietR_Sankey_Steelhead.csv”, and
-“DietR_IRI_Output_entirestudy.csv” datafiles are the IRI output
-formatted for the network plot (presented as Figure 1 in the
-manuscript).</li>
-<li>The “Lagoon_fish_isotope.csv” datafile is used in both of the
-isotope markdown scripts as the isotope input file.</li>
+<li><p><code>Lagoon_fish_isotope.csv</code>: Base stable isotope
+metadata including raw fisheries metrics, species identifications, fork
+lengths, and raw/lipid-corrected isotope values.</p></li>
+<li><p><code>OUT.Consumed.csv</code>: Raw count data of specific prey
+items found across individual stomach samples by species and
+month.</p></li>
+<li><p><code>TaxaGroupings.csv</code>: Lookup table linking raw prey
+items to aggregated composite categories and standardized shorthand
+codes (e.g., <code>AME</code>, <code>GAM</code>) used in downstream
+modeling and figure labels.</p></li>
+<li><p><code>IRI_input.csv</code>: Formatted input file containing
+calculated numeric percentages (<code>PercentNumber</code>,
+<code>PercentOccurrence</code>, <code>PercentMass</code>) grouped by
+predator species and month.</p></li>
+<li><p><code>IRI_input_entirestudy.csv</code>: Formatted input file
+mapping numeric percentage diet metrics collapsed globally for the
+entire study period.</p></li>
+<li><p><code>DietR_Sankey_Coho.csv</code> &amp;
+<code>DietR_Sankey_Steelhead.csv</code>: Pre-sorted and arranged
+<code>%IRI</code> metrics used to render individual components of the
+network visualizations.</p></li>
+<li><p><code>DietR_IRI_Output_entirestudy.csv</code>: Reference dataset
+containing overall study importance metrics used to mathematically scale
+the monthly values in network plots.</p></li>
 </ul>
+<hr />
+</div>
+</div>
+<div id="data-wrangling-analysis-workflow" class="section level2">
+<h2>Data Wrangling &amp; Analysis Workflow</h2>
+<div id="gut-content-analysis-gca-pipeline-lagoon_gca.rmd" class="section level3">
+<h3>1. Gut Content Analysis (GCA) Pipeline
+(<code>Lagoon_GCA.Rmd</code>)</h3>
+<p>This script processes traditional stomach content matrices to
+evaluate structural feeding dynamics, similarities, and prey
+preferences.</p>
+<ul>
+<li><strong>Directory Setup:</strong> Automatically checks for and
+creates <code>Lagoon_GCA_Input_Data/</code> and
+<code>Lagoon_GCA_Results/</code> (with subfolders for <code>IRI</code>,
+<code>Schoener_Overlap</code>, <code>IndVal</code>,
+<code>Figures</code>, and <code>Tables</code>).</li>
+<li><strong>Trophic Modeling (DietR):</strong> Uses the
+<code>CompositeIndices</code> function in <code>dietr</code> to
+calculate the Index of Relative Importance (IRI) using raw Percentage
+Number (<span class="math inline">\(N\%\)</span>), Biomass (<span class="math inline">\(M\%\)</span>), and Frequency of Occurrence (<span class="math inline">\(FO\%\)</span>). Models are executed sequentially
+by species/month and globally as a study-wide aggregate. Outputs are
+exported to <code>IRI_Monthly_Output.csv</code>,
+<code>IRI_Study_Output.csv</code>, and organized into ranked summary
+matrix formats (Supplemental Table S3).</li>
+<li><strong>Diet Overlap Characterization:</strong> Employs the
+<code>FSAmisc</code> package to calculate <strong>Schoener’s Similarity
+Index (<span class="math inline">\(D\)</span>)</strong> dynamically
+across monthly data slices and global pooled frames, outputting metrics
+to <code>monthly_diet_overlap_summary.csv</code> to indicate significant
+ecological overlaps (<span class="math inline">\(\ge 0.6\)</span>).</li>
+<li><strong>Indicator Value Analysis:</strong> Employs Dufrêne &amp;
+Legendre’s <strong>IndVal method</strong> via the <code>multipatt</code>
+function in <code>indicspecies</code> (<span class="math inline">\(9,999\)</span> permutations) to isolate specific
+prey types strictly associated with either Coho or Steelhead foraging
+patterns across changing time steps (Table 2).</li>
+<li><strong>Community Ordinations &amp; Dissimilarity (vegan):</strong>
+Standardization of prey abundance matrices via <code>decostand</code>
+followed by arcsine square-root transformation. Performs:
+<ul>
+<li><strong>Nonmetric Multidimensional Scaling (NMDS):</strong> 2-D
+ordinations (<code>metaMDS</code>) using Bray-Curtis distance matrices
+(<span class="math inline">\(1,000\)</span> maximum steps) with an
+internal <code>envfit</code> vector-loading overlay to identify prey
+items with significant formatting impacts (<span class="math inline">\(p
+\le 0.01\)</span>).</li>
+<li><strong>Analysis of Similarities (ANOSIM):</strong> One-way
+permutation tests (<code>anosim</code>) evaluating group separation
+statistics (<span class="math inline">\(R\)</span>) to distinguish
+feeding partition differences. Outputs are consolidated into an HTML
+dashboard matrix.</li>
+</ul></li>
+<li><strong>Visualizations Generated:</strong>
+<ul>
+<li><code>Figure_1.pdf / .tif</code>: Bi-directional Sankey network
+diagrams generated via <code>networkD3</code>, structurally adjusted to
+preserve overall baseline study weight bounds, capturing macro-dietary
+interactions over time.</li>
+<li><code>Figure_S1_NMDS.pdf / .tif</code>: Multi-panel 2-D NMDS
+ordination plots mapped with <span class="math inline">\(95\%\)</span>
+centroid ellipses and diagnostic vector loading overlays.</li>
+</ul></li>
+</ul>
+</div>
+<div id="stable-isotope-analysis-sia-pipeline-lagoon_sia.rmd" class="section level3">
+<h3>2. Stable Isotope Analysis (SIA) Pipeline
+(<code>Lagoon_SIA.Rmd</code>)</h3>
+<p>This script executes a complete ecological niche analysis using
+carbon (<span class="math inline">\(\delta^{13}\text{C}\)</span>) and
+nitrogen (<span class="math inline">\(\delta^{15}\text{N}\)</span>)
+stable isotope ratios.</p>
+<ul>
+<li><strong>Directory Setup:</strong> Automatically checks for and
+creates <code>Lagoon_SIA_Input_Data/</code> and
+<code>Lagoon_SIA_Results/</code> (with internal subfolders for
+<code>SIBER</code>, <code>NicheROVER</code>, <code>Figures</code>, and
+<code>Tables</code>).</li>
+<li><strong>Mathematical Lipid Correction:</strong> Identifies fin clips
+with a <span class="math inline">\(\text{C:N ratio} &gt; 3.5\)</span>.
+Applies the linear percentage lipid calculation model (Post et al. 2007)
+combined with a nonlinear normalization framework (Kiljunen et al. 2006)
+to generate the standardized <code>d13C_corr</code> variable used in all
+downstream models.</li>
+<li><strong>Statistical Contrasts:</strong> Runs non-parametric
+<strong>Wilcoxon Rank Sum tests</strong> to contrast monthly differences
+in <span class="math inline">\(\delta^{13}\text{C}\)</span> and <span class="math inline">\(\delta^{15}\text{N}\)</span> between Coho Salmon
+(<code>Onki</code>) and Steelhead (<code>Onmy</code>), incorporating a
+Bonferroni correction for multi-comparison control. Exports outputs to
+<code>Isotope_Wilcoxon_Results.csv</code> and generates formatted
+summary tables (Supplemental Table S4).</li>
+<li><strong>Core Niche Breadth Metrics (SIBER):</strong> Utilizes the
+<code>SIBER</code> package to calculate Maximum Likelihood point
+estimates for Total Area (TA) and Standard Ellipse Area corrected for
+small sample sizes (SEAc). Runs a Bayesian Markov Chain Monte Carlo
+(MCMC) model (<span class="math inline">\(2 \times 10^4\)</span>
+iterations, <span class="math inline">\(1 \times 10^3\)</span> burn-in)
+to derive the Bayesian Standard Ellipse Area (<span class="math inline">\(\text{SEA}_b\)</span>), extracting posterior
+distributions, mode estimates, and credible intervals (<span class="math inline">\(50\%\)</span>, <span class="math inline">\(75\%\)</span>, <span class="math inline">\(95\%\)</span>). Exports results to
+<code>SIBER_Metrics_Summary.csv</code> and
+<code>QC_Data_Validation.csv</code>.</li>
+<li><strong>Isotopic Niche Overlap (nicheROVER):</strong> Implements a
+Bayesian framework via <code>nicheROVER</code> (<span class="math inline">\(1,000\)</span> posterior iterations) to calculate
+directional, probabilistic niche overlap between species across monthly
+intervals and pooled study-wide datasets. Generates niche sizes,
+standard errors, and <span class="math inline">\(95\%\)</span> credible
+interval bounds. Exports outputs to localized
+<code>Rover_Overlap_[Period].csv</code> and
+<code>NicheROVER_Overlap_Summary_Table.csv</code>.</li>
+<li><strong>Visualizations Generated:</strong>
+<ul>
+<li><code>Figure_2.pdf / .tif</code>: Multi-panel stable isotope biplots
+showing core niches via <span class="math inline">\(40\%\)</span> and
+<span class="math inline">\(95\%\)</span> SEAc boundary polygons.</li>
+<li><code>Figure_3.pdf / .tif</code>: Credible interval distribution
+plots illustrating isotopic diet breadth changes.</li>
+<li><code>Figure_4.pdf / .tif</code>: Scaled posterior density panels
+displaying probabilistic directional overlap distributions.</li>
+</ul></li>
+</ul>
+</div>
+</div>
 </div>
 
 
