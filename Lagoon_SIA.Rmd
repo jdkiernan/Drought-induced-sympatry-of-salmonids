@@ -56,7 +56,6 @@ $$\delta^{13}C_{corr} = \delta^{13}C_{raw} + \Delta\delta^{13}C$$
 This variable ($\delta^{13}C_{corr}$) is used in all subsequent analyses. See methods section of manuscript for additional details.
 
 ```{r Load full isotope data}
-
 # Create universal input and output directories
 input_dir <- "Lagoon_SIA_Input_Data"
 sia_dir <- "Lagoon_SIA_Results"
@@ -96,7 +95,7 @@ data<-subset(data_full, select=c(Month, Species, Length_mm, d13C_corr, d15N)) #s
 ```
 
 ## Summarize stable isotope data
-Purpose: to summarize the stable isotope data for each salmonid species (Onki = coho salmon and Onmy = steelhead) by month.
+Purpose: to summarize the stable isotope data for each salmonid species (Onki = coho salmon and Onmy = steelhead) by month. These data are presented, in part, in Table 4 of the manuscript.
 ```{r Summarize stable isotope data}
 # Calculate summary metrics
 isotope.fish.summary<-ddply(data, c("Month", "Species"), summarise,
@@ -748,8 +747,7 @@ prob_summary_df %>%
 The above data are not included in the manuscript but confirm that the isotopic niche breadth of lagoon-rearing steelhead (Onmy) was generally greater than that of coho salmon (Onki).
 
 ### Determining monthly and overall overlap in SIBER
-
-Note: this chunk of code is very slow to run.
+Note: this chunk of code is VERY slow to run.
 ```{r Determining monthly and overall overlap in SIBER, cache=TRUE}
 
 set.seed(2564)
@@ -790,7 +788,7 @@ overall.bayes95.overlap <- bayesianOverlap(ellipse15, ellipse16, ellipses.poster
                                    draws = 1000, p.interval = 0.95, n = 100)
 ```
 
-The next chunk calculates the distribution of overlap based on the posterior distributions of the fitted ellipses. Overlap is expressed as a proportion of the non-overlapping area of the two ellipses so values should range from 0 to 1.
+The next chunk calculates the distribution of overlap based on the posterior distributions of the fitted ellipses. Overlap is expressed as a proportion of the non-overlapping area of the two ellipses so values should range from 0 to 1. These results are exploratory and not presented in the manuscript.
 
 ```{r Distribution of 95 overlap}
 jun.bayes.prop.95.over <- (jun.bayes95.overlap[,3] / (jun.bayes95.overlap[,2] + 
@@ -827,7 +825,7 @@ overall.bayes.prop.95.over <- (overall.bayes95.overlap[,3] / (overall.bayes95.ov
 #overall.bayes.prop.95.over
 ```
 
-The next chunk creates a new data.frame (name = bayes.95.overlap.plotting) that combines the above posterior distributions (of proportional overlap) for data summary and visualization.
+The next chunk creates a new data.frame (name = bayes.95.overlap.plotting) that combines the above posterior distributions (of proportional overlap) for data summary and visualization. These results are exploratory and not presented in the manuscript.
 
 ```{r Overlap based on the posterior distributions of SEAB}
 
@@ -855,9 +853,10 @@ boxplot(as.data.frame(bayes.95.overlap.plotting),
 ```
 Overlap values are presented as a proportion of the total area that overlaps in the two 95% ellipses and overlap values range from 0 when the ellipses are completely separated to 1.0 when the two ellipses fully overlap.
 
-The above plot is not included in the manuscript but is useful to explore the data. The next chunk of code extracts summary statistics for each distribution.
+The next chunk of code extracts summary statistics for each distribution.
 
 ### Mean, median and modal overlap values based on the posterior distributions of SEAB
+These results are exploratory and not presented in the manuscript.
 
 ```{r Mean, median and mode overlap values based on the posterior distributions of SEAB}
 
@@ -1004,7 +1003,9 @@ ggsave(file.path(sia_dir, "Figures", "Figure_3.tif"),
        device = "tiff", compression = "lzw")
 ```
 Figure 3 legend: 
-Estimates of dietary niche breadth (‰^2) for juvenile coho salmon (*Oncorhynchus kisutch*; Onki) and steelhead (*O. mykiss*; Onmy) captured in the Scott Creek lagoon. Species-specific estimates were generated for each month of the study (panels a–g) and an overall estimate (h) was produced from pooled data (all months combined) using posterior estimates of Bayesian standard ellipse areas (SEAb). Black dots represent the mean SEAb value after 10,000 iterations and box widths from wide to narrow represent 50, 75, and 95% credible intervals. 
+Estimates of dietary niche breadth (‰^2) for juvenile coho salmon (*Oncorhynchus kisutch*; Onki) and steelhead (*O. mykiss*; Onmy) captured in the Scott Creek lagoon. Species-specific estimates were generated for each month of the study (panels a–g) and an overall estimate (h) was produced from pooled data (all months combined) using posterior estimates of Bayesian standard ellipse areas (SEAb). Black dots represent the mean SEAb value after 20,000 iterations and box widths from wide to narrow represent 50, 75, and 95% credible intervals. 
+
+### Generate table of SEAb Posterior Distribution Central Tendencies and Credible Intervals for Figure 3 data validation.
 
 ```{r, quick QC for data validation}
 library(dplyr)
@@ -1352,6 +1353,7 @@ write.table(fish.size, file = file.path(sia_dir, "NicheROVER",
 ```
 
 ### Create summary table of isotopic niche size and niche overlap
+These data, in part, appear in Table S5 of the manuscript.
 
 ```{r kable_summary_table, echo=FALSE}
 #Combine the list of data frames into one
