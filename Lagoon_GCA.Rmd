@@ -1,5 +1,5 @@
 ---
-title: "Explaining gut content analyses (CGA) conducted on Scott Creek Lagoon fish diet data"
+title: "Explaining gut content analyses (CGA) conducted on Scott Creek Lagoon fish diet samples"
 subtitle: "Drought-induced sympatry of two salmonid species: Feeding ecology and trophic
   niches of potential competitors"
 date: "2025-12-01"
@@ -79,7 +79,7 @@ Data.Full <- read_csv("Lagoon_GCA_Input_Data/OUT.Consumed.csv")
 
 ```
 
-## Fish Diet Summary (Table S2 in manuscript)
+## Monthly summaries of fish processed for gut content analysis (Table S2 in manuscript)
 
 ```{r Table S2 Fish summary, message=FALSE, warning=FALSE}
 
@@ -293,7 +293,7 @@ knitr::kable(final_table,
 
 
 ### Create table of "overall" IRI values, sorted from highest to lowest. 
-These data are used to check and verify the relative order the prey categories are presented in Figure 1.
+These data are used to check and verify the relative order that the prey categories are presented in Figure 1. They also contribute to Tablse S3 in the manuscript.
 
 ```{r Sorted Overall IRI Table and Export}
 # Load the taxa groupings to grab the codes
@@ -337,14 +337,13 @@ overall_ranked_iri %>%
 Goal: Create network plots using the *networkD3* package for the diets of juvenile Coho Salmon and Steelhead to illustrate Index of Relative Importance (%IRI) values. The initial plots display %IRI for each taxa group on the left side and monthly %IRI values on the right hand side. 
 
 Notes:
-* We are interested in showing the relationships of taxon groupings over time. The general plot formatting sums all of the values on the right side to create the node lengths on the left side of the plot. This formatting works if you are strictly looking at a value for the *entire study period*. If we used formatting the sankey plot would sum the values on the right (for each month) to create the width of the bars on the left (each taxon grouping) which isn't what we want. Therefore, we want to scale the values on the left so they equal the "entire study value" on the right.
+* We are interested in showing the relationships of taxon groupings over time. The general plot formatting sums all of the values on the right side to create the node lengths on the left side of the plot. This formatting works if you are strictly looking at a value for the *entire study period*. If we used formatting the sankey plot would sum the values on the right (for each month) to create the width of the bars on the left (each taxon grouping) which isn't what we want. Therefore, we need to scale the values on the left so they equal the "entire study value" on the right.
 
 ### Dataset used for Fig. 1
 
 1. The <span style="color:purple">*DietR_Sankey_Coho.csv*</span> data file is used to generate the coho plot. The values were copied form the IRI output file and reordered from greatest to lowest %IRI for the entire study. The column "Month2" is used to sort the data chronologically (after taxa groupings). Also, a Grouping column was added to distinguish %IRI > 1%. Note that %IRI values < 1% are grouped together as gray (at the bottom of the plot). (Used as the right hand side of the plot).
 
 2. The <span style="color:purple">*DietR_Sankey_Steelhead.csv*</span> data file is used to generate the steelhead plot. The values were copied form the IRI output file and manipulated the same way as the coho file above.
-
 
 ### Coho salmon plot
 
@@ -482,7 +481,7 @@ coho.plot
 
 ### Steelhead Plot
 
-Second half of Figure 1 (combined below). Note some of the code is repeated form the Coho plot and has been commented out in this section.
+Second (right) half of Figure 1 (combined below). Note some of the code is repeated form the Coho plot and has been commented out in this section.
 
 ```{r Steelhead Plot, echo=TRUE, message=FALSE, warning=FALSE, cache=TRUE, cache.path="cache/"}
 # Step 1: Read in steelhead monthly DietR output data
@@ -587,23 +586,24 @@ sh.plot
 ```
 
 ### Figure 1 (Combined Plot)
-Note: Figure labeling was done outside of R.
-#Goal: to make a plot with coho on the left, SH on the right and month in the middle joining the two
+Note: Final figure labeling was done manually outside of the R environment.
+
+#Goal: to make a plot with coho on the left, SH on the right and month in the middle linking the two species plots
 
 ```{r Combined Plot, echo=TRUE, message=FALSE, warning=FALSE, cache=TRUE, cache.path="cache/"}
 
-# Step 1: Format Coho Data (Taxa -> Month)
+# Format Coho Data (Taxa -> Month)
 coho2 <- coho.scaled %>%
   mutate(Target_New = paste0(Month, "_CO")) %>%
   select(Species.x, Source = Code, Target = Target_New, PercentIRI.scaled)
 
-# Step 2: Format Steelhead Data (Month -> Taxa)
+# Format Steelhead Data (Month -> Taxa)
 sh2 <- sh.scaled %>%
   mutate(Source_New = paste0(Month, "_SH"),
          Target_New = paste0(Code, "_SH_Taxa")) %>%
   select(Species.x, Source = Source_New, Target = Target_New, PercentIRI.scaled)
 
-# Step 3: Combine and assign clean color groupings
+# Combine and assign clean color groupings
 all <- bind_rows(coho2, sh2) %>%
   mutate(Group = case_when(
     grepl("^AME", Source) | grepl("^AME", Target) ~ "1",
@@ -616,7 +616,7 @@ all <- bind_rows(coho2, sh2) %>%
     TRUE ~ "10"
   ) %>% as.factor())
 
-# Step 4: Create transparent dummy links to force the center gap between right and left halves
+# Create transparent dummy links to force the center gap between right and left halves
 dummy_links <- data.frame(
   Species.x = "Dummy",
   Source = paste0(c("Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"), "_CO"),
@@ -627,7 +627,7 @@ dummy_links <- data.frame(
 
 all <- bind_rows(all, dummy_links)
 
-# Step 5: Explicitly define Node order to prevent stacking when iterations = 0
+# Explicitly define Node order to prevent stacking when iterations = 0
 coho_taxa <- unique(coho2$Source)
 coho_months <- paste0(c("Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"), "_CO")
 sh_months <- paste0(c("Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"), "_SH")
@@ -635,7 +635,7 @@ sh_taxa <- unique(sh2$Target)
 
 nodes <- data.frame(name = c(coho_taxa, coho_months, sh_months, sh_taxa))
 
-# Step 6: Assign Node color groups
+# Assign Node color groups
 nodes <- nodes %>%
   mutate(group = case_when(
     grepl("_CO$|_SH$", name) ~ "11", # Months
@@ -649,18 +649,18 @@ nodes <- nodes %>%
     TRUE ~ "10"
   ) %>% as.factor())
 
-# Step 7: Map the exact d3 Color Scale
+# Map the exact d3 Color Scale
 my_color.all <- 'd3.scaleOrdinal() .domain(["1", "2", "3", "4", "5", "6", "10", "11", "12", "13"])
                                .range(["#00429D", "#6FA4A6", "#ABBF29", "#A7D3B4", "#6F812A", "#43749E", "gray", "black", "orange", "#00000000"])'
 
-# Step 8: Calculate indices and clean up display labels
+# Calculate indices and clean up display labels
 all$IDsource <- match(all$Source, nodes$name) - 1 
 all$IDtarget <- match(all$Target, nodes$name) - 1
 
 nodes$name <- gsub("_SH_Taxa", "", nodes$name) # Strip the steelhead suffix
 nodes$name <- ifelse(grepl("_CO$|_SH$", nodes$name), " ", nodes$name) # Blank the months
 
-# Step 9: Build Plot
+# Build Plot
 all.plot <- sankeyNetwork(Links = all, Nodes = nodes,
               Source = "IDsource", Target = "IDtarget",
               Value = "PercentIRI.scaled", NodeID = "name", 
@@ -670,7 +670,7 @@ all.plot <- sankeyNetwork(Links = all, Nodes = nodes,
               sinksRight = F, fontSize = 12,
               margin = list(left = 50, right = 50)) 
 
-# Step 10: Inject JavaScript for margin labels
+# Inject JavaScript for margin labels
 library(htmlwidgets)
 all.plot <- onRender(all.plot,
   '
@@ -707,7 +707,7 @@ unlink(c("Lagoon_GCA_Results/Figures/Figure_1_temp.html", "Lagoon_GCA_Results/Fi
 ```
 ## Schoener's similarity index (D)
 
-As a univariate measure of diet overlap, we calculated Schoener's similarity index (D) for each salmonid species during each sample period using the *FSAmisc* package (Ogle 2022). Index values range from 0 to 1 and values ≥ 0.6 are typically considered significant evidence of dietary overlap (Wallace Jr. 1981).
+As a univariate measure of diet overlap, we calculated Schoener's similarity index (D) for each salmonid species during each sample period using the *FSAmisc* package (Ogle 2022). Index values range from 0 to 1 and values ≥ 0.6 are typically considered substantial evidence of dietary overlap (Wallace Jr. 1981).
 
 ```{r Schoeners Diet Overlap creating the loop, message=FALSE, warning=FALSE}
 # Re-load prey (gut content) data set
@@ -982,6 +982,7 @@ names(all_indval_results) <- months_to_analyze
 ```
 
 ### Extract significant IndVal results and create a summary table
+These results appear in Table 2 of the manuscript
 
 ```{r Extracting significant indicator species}
 
@@ -1071,7 +1072,7 @@ final_indicators_table %>%
 
 Nonmetric multidimensional scaling (NMDS) ordinations were used to explore patterns of variation among the stomach contents of individual lagoon-captured coho salmon and steelhead. We assessed the contribution and significance of each prey category to the NMDS ordination using the ‘envfit’ function in ‘vegan’, applying 999 permutations and a significance threshold of *p* ≤ 0.01. 
 
-To determine whether the composition of the diets of coho salmon and steelhead were distinct, we employed one-way analysis of similarities (ANOSIM; Clarke 1993) on the same Bray-Curtis matrix used for NMDS ordinations. ANOSIM generates a test statistic (R) scaled between −1 and 1 to describe group differences. A positive R-value indicates separation between groups, a value of 0 indicates no separation, and a negative value indicates that variability within groups is greater than the variability between groups (Clark and Gorley 2001). The statistical significance of the R-statistic was determined with 999 random permutations.
+To test whether the dietary composition of individual fish differed between coho salmon and steelhead, we employed one-way analysis of similarities (ANOSIM; Clarke 1993) on the same Bray-Curtis matrix used for NMDS ordinations. ANOSIM generates a test statistic (R) scaled between −1 and 1 to describe group (species) differences based on ranked dissimilarities. Positive R-values indicate greater dietary dissimilarity between groups than within each group, whereas an R-value of 0 indicates little or no dietary separation between groups and negative R-values indicate greater dietary dissimilarity within each group than between them (Clarke and Gorley 2001). The statistical significance of the R-statistic was determined with 999 random permutations.
 
 ```{r NMDS setup, message=FALSE, warning=FALSE}
 rm(list=ls()) #clear environment
@@ -1199,7 +1200,8 @@ analyze_diet <- function(data, subset_name, prey_indices) {
 }
 ```
 
-Note: The next chunk of code is slow to run as it loops through all time periods (months + overall)
+### Run NMDS analysis loop
+Note: This chunk of code is slow to run as it loops through all time periods (months + overall)
 
 ```{r Run NMDS analysis loop}
 #Define the periods in specific order
@@ -1226,6 +1228,7 @@ for(per in periods) {
 ```
 
 ### Summary table of NMDS and ANOSIM results
+The results summarized in this chunk are used, in part, to populate Table 3 in the manuscript
 
 ```{r Summary table for ANOSIM and NMDS results}
 
@@ -1248,9 +1251,8 @@ kbl(summary_df,
                 html_font = "Cambria") %>%
   add_header_above(c(" " = 1, "ANOSIM" = 2, "NMDS" = 2))
 ```
-The above are used, in part, to populate Table 4 in the manuscript
 
-### Create and assemble Figure S1 (NMDS plots)
+### Create and assemble NMDS plots
 
 ```{r Create Figure S1 plot labels}
 # Define standardized labels for all plots
@@ -1267,7 +1269,7 @@ plot_labels <- c(
 )
 ```
 
-### Figure S1. NMDS Ordination plots
+### Generate multi-panel NMDS Ordination plots (Figure S1)
 
 ```{r Create multi-panel Figure S1, fig.width=9, fig.height=5, echo=FALSE}
 library(grid) 
