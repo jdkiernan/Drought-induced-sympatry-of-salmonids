@@ -2,7 +2,7 @@
 title: "Explaining analyses conducted on Scott Creek Lagoon fish stable isotope data"
 subtitle: "Drought-induced sympatry of two salmonid species: Feeding ecology and trophic niches of potential competitors"
 authors: "Joseph D. Kiernan and Rosealea M. Bond"
-date: "2025-12-01"
+date: "`r Sys.Date()`"
 output:
   html_document:
     toc: true
@@ -21,7 +21,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Summary and analysis of natural abundance stable isotope data
 
 This document explains the analyses performed on the stable isotope samples collected in support of the manuscript titled, "Drought-induced sympatry of two salmonid species: Feeding ecology and trophic niches of potential competitors". A separate R markdown file explains the analyses conducted on fish diet (stomach content) samples. Questions regarding these analyses or the R markdown should be directed to Dr. Joseph Kiernan at joseph.kiernan@noaa.gov.
-
 
 ```{r Libraries, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -48,7 +47,7 @@ This data set includes only age-1+ (yearling) coho salmon and steelhead. Carbon 
 1. Percentage Lipid Calculation (Post et al. 2007) utilizes the linear relationship between C:N and lipid content ($L$) proposed for aquatic animals:
 $$L = -20.54 + (7.24 \times C:N)$$ 
 
-2. Nonlinear Normalization Model (Kiljunen et al. 2006) takes that $L$ value and applies the modified parameters ($D = 7.018$ and $I = 0.048$) to the McConnaughey & McRoy (1979) equation to calculate the isotopic shift: 
+2. Nonlinear Normalization Model (Kiljunen et al. 2006) takes that $L$ value and applies the modified parameters ($D = 7.018$ and $I = 0.048$) to the McConnaughey and McRoy (1979) equation to calculate the isotopic shift: 
 ($\Delta\delta^{13}C$):$$\Delta\delta^{13}C = 7.018 \times \left(0.048 + \frac{3.90}{1 + 287 / L}\right)$$
 
 3. Final Correction
@@ -64,7 +63,7 @@ if (!dir.exists(input_dir)) {
   dir.create(input_dir)
 }
 
-# Create Results Directory and Analysis Subfolders
+# Create results directory and analysis-specific sub-folders
 output_dirs <- c(
   sia_dir,
   file.path(sia_dir, "SIBER"),
@@ -85,17 +84,19 @@ if (!dir.exists(sia_dir)) {
 
 # Read the data using file.path() and the input directory
 data_full <- read.csv(file.path(input_dir, "Lagoon_fish_isotope.csv"))
-# The full data set contains additional fisheries metadata which do not contribute to the analysis
+# Note the full data set contains additional fisheries metadata which do not contribute to the analysis
 
 # To list months of the study chronologically rather than alphabetically.
 data_full$Month <- factor(data_full$Month, levels =c("Jun","Jul","Aug","Sep","Oct","Nov","Dec"), ordered = TRUE)
 
 data<-subset(data_full, select=c(Month, Species, Length_mm, d13C_corr, d15N)) #should be 494 observations of 5 variables
+
 # The reduced data set includes five variables of interest: (1) sample month; (2) fish species code; (3) fish fork length (mm); (4) fish d13C value; and (5) fish d15N value.
 ```
 
 ## Summarize stable isotope data
-Purpose: to summarize the stable isotope data for each salmonid species (Onki = coho salmon and Onmy = steelhead) by month. These data are presented, in part, in Table 4 of the manuscript.
+Purpose: to summarize the stable isotope data for each salmonid species (Onki = coho salmon and Onmy = steelhead) by month. These summary metrics are presented, in part, in Table 4 of the manuscript.
+
 ```{r Summarize stable isotope data}
 # Calculate summary metrics
 isotope.fish.summary<-ddply(data, c("Month", "Species"), summarise,
@@ -158,7 +159,6 @@ all_wilcox_eff <- data_long %>%
   rstatix::wilcox_effsize(value ~ Species)
 
 all_results <- all_wilcox_tests %>%
-  # Corrected join parameters here
   left_join(all_wilcox_eff, by = c("Month", "Isotope", ".y.", "group1", "group2", "n1", "n2")) %>%
   mutate(Period = as.character(Month))
 
@@ -172,7 +172,6 @@ overall_wilcox_eff <- data_long %>%
   rstatix::wilcox_effsize(value ~ Species)
 
 overall_results <- overall_wilcox_tests %>%
-  # Corrected join parameters here
   left_join(overall_wilcox_eff, by = c("Isotope", ".y.", "group1", "group2", "n1", "n2")) %>%
   mutate(Period = "Overall")
 
@@ -187,10 +186,10 @@ write_csv(full_results_df, file.path(sia_dir, "Tables", "Isotope_Wilcoxon_Result
 ```
 
 ### Summary table of results for Wilcoxon tests. 
-These results are presented in Supplemental Table S4 in the manuscript. Note: Effect sizes are typically interpreted as small (0.1 to < 0.3), moderate (0.3 to < 0.5), and large (> 0.5).
+These results are presented in Supplemental Table S4 in the manuscript. Note: Effect sizes are typically interpreted as small (0.1 to < 0.3), moderate (0.3 to < 0.5), and large (>= 0.5).
 
 ```{r Summarizing Wilcoxon test results, results='asis'}
-# This chunk uses the full_results_df created in the previous chunk
+# This chunk uses the full_results_df created above
 # Reshape data (Pivot wider)
 wide_results <- full_results_df %>%
   pivot_wider(
@@ -201,7 +200,7 @@ wide_results <- full_results_df %>%
   ) %>%
   dplyr::rename(Month = Period)
 
-# Reorder rows (chronological)
+# Reorder rows chronologically
 month_order <- c("Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Overall")
 wide_results <- wide_results %>%
   mutate(Month = factor(Month, levels = month_order)) %>%
@@ -281,7 +280,7 @@ siber.monthly.obj <- createSiberObject(siber.data)
 # Calculate Maximum Likelihood (ML) group metrics for each month
 group.ML.monthly <- groupMetricsML(siber.monthly.obj)
 
-# To get "Overall" metrics, we create a copy of the data and assigned all records to a single "Overall" community.
+# To generate "Overall" metrics, we create a copy of the data and assigned all records to a single "Overall" community.
 siber.overall.data <- siber.data
 siber.overall.data$community <- "Overall"
 
@@ -424,7 +423,7 @@ final_plot_list <- map2(all_siber_plots, names(all_siber_plots), function(p, nam
   return(p)
 })
 
-# Main Grid
+# Main grid
 main_grid <- wrap_plots(final_plot_list, ncol = 4, nrow = 2) & 
   theme(text = element_text(family = "serif"))
 
@@ -454,10 +453,9 @@ ggsave(file.path(sia_dir, "Figures", "Figure_2.tif"),
 Figure 2. Caption:
 Stable isotope biplots (δ13C versus δ15N) for juvenile coho salmon (*Oncorhynchus kisutch*; Onki) and steelhead (*O. mykiss*; Onmy), captured in the Scott Creek lagoon during each month of the study (Jun–Dec, panels a–g respectively). Panel h shows composited data from all months of the study. Points are individual fish samples and filled ellipses are the standard ellipse areas (corrected for small sample size; SEAc). Standard ellipse areas encompass approximately 40% of the isotopic data and represent the core isotopic niche for each species. The larger ellipses contain approximately 95% of the isotopic data for each species.
 
-
 ## Calculating Bayesian Standard Ellipse Area (SEAb)
 
-The previous calculations yielded point estimates (i.e., single value) of overlap based on the maximum likelihood estimated SEAc. To assess how reliable these data are, we need an associated measure of confidence/variance. This is achieved by calculating the Bayesian standard ellipse area (SEAb) and generating credible intervals.
+The previous calculations yielded point estimates (i.e., a single value) of overlap based on the maximum likelihood estimated SEAc. To assess how reliable these data are, we need an associated measure of confidence/variance. This is achieved by calculating the Bayesian standard ellipse area (SEAb) and generating credible intervals.
 
 ```{r Calculate SEAb with uninformed priors, echo=TRUE, message=TRUE, warning=TRUE, cache=TRUE}
 
@@ -483,7 +481,7 @@ ellipses.posterior <- siberMVN(siber.monthly.obj, parms, priors)
 SEA.B <- siberEllipses(ellipses.posterior)
 ```
 
-Here is a preliminary look at the distribution of ellipses for each population as a SIBER density plot. The gradations denote 95, 75 and 50% credible intervals. This plot does not include the overall (study-wide) pooled estimate which is generated later. This plot, in part, will be recreated later using ggplot to produce Figure 3 in the manuscript.
+Here is a preliminary look at the distribution of ellipses for each population as a SIBER density plot. The gradations denote 95, 75 and 50% credible intervals. This plot does not include the overall (study-wide) pooled estimate which is generated later in the script. This plot, in part, will be recreated later using ggplot to produce Figure 3 that appears in the manuscript.
 
 ```{r Creating standard SIBER density plot, echo=TRUE, message=TRUE, warning=TRUE, cache=TRUE}
 # Save current settings
@@ -515,7 +513,7 @@ siberDensityPlot(
 # Restore original settings
 par(op)
 
-# The nfollowing line will add red x's for the ML estimated SEAc, if desired
+# The following line (currently suppresed) can be used to add red x's for the ML estimated SEAc, if desired
 #points(1:ncol(SEA.B), group.ML.monthly[3,], col="red", pch = "x", lwd = 2)
 ```
 
@@ -558,7 +556,7 @@ write.table(SEA.B.credibles, file = file.path(sia_dir, "SIBER", "SEAb_Credible_I
             append = F, sep = ',', row.names = T, col.names = NA)
 ```
 
-Although SIBER has a built-in SEAb plot (Siber.density.plot, created above), we will prepare the SIBER output for ggplot which is easier to customize and manipulate.
+Although SIBER has a built-in SEAb plot (Siber.density.plot, created above), we will prepare the SIBER output for ggplot which is far easier to customize and manipulate.
 
 ```{r Draw SEA.B posteriors, echo=TRUE, message=TRUE, warning=TRUE, cache=TRUE}
 
@@ -578,7 +576,7 @@ SEA.B.2$Month <- factor(SEA.B.2$Month,
 ```
 Note: the warning "No id variables; using all as measure variables" is the precise structure we want for the data
 
-Next we re-run the analysis for to generate the "overall" (all monthly data combined) estimates foe each salmonid spp.
+Next we re-run the analysis for to generate the "overall" (all monthly data combined) estimates for each salmonid spp.
 
 ```{r Generate "Overall" SIBER model, echo=TRUE, message=TRUE, warning=TRUE, cache=TRUE}
 
@@ -650,7 +648,7 @@ siberDensityPlot(
                  main = ""
                  )
 
-#The following line of code (currently suppressed) will add red x's for the ML estimated SEAc if desired
+# The following line (currently suppresed) can be used to add red x's for the ML estimated SEAc, if desired
 #points(1:ncol(SEA.B), group.ML.overall[3,], col="red", pch = "x", lwd = 2)
 ```
 
@@ -663,14 +661,14 @@ cr.p <- c(0.50, 0.75, 0.95) # vector of quantiles
 SEA.B.overall.modes <- lapply(
   as.data.frame(SEA.B.overall), 
   function(x,...){tmp <- hdrcde::hdr(x)$mode},
-  prob = cr.p, all.modes = T) #vectors of the modes for each group's SEA.b
+  prob = cr.p, all.modes = T) # vectors of the modes for each group's SEA.b
 #SEA.B.overall.modes
 
 # Call to hdrcde:hdr using lapply()
 SEA.B.overall.credibles <- lapply(
   as.data.frame(SEA.B.overall), 
   function(x,...){tmp <- hdrcde::hdr(x)$hdr},
-  prob = cr.p) #vectors of the credible intervals for each group's SEA.b
+  prob = cr.p) # vectors of the credible intervals for each group's SEA.b
 #SEA.B.overall.credibles
 
 # Save this output to the SIBER_Output directory
@@ -699,13 +697,13 @@ full_col_names <- c('Jun.Onki', 'Jun.Onmy',
                     'Overall.Onki', 'Overall.Onmy')
 colnames(SEA.B.full) <- full_col_names
 
-#Melt the data for ggplot (creating SEA.B.3)
+# Melt the data for ggplot (creating SEA.B.3)
 SEA.B.3 <- as.data.frame(SEA.B.full) %>% 
-  #Melt the wide data into long format
+  # Melt the wide data into long format
   melt(variable.name = "combo", value.name = "value") %>%
-  #Split the 'combo' column into Month and Species
+  # Split the 'combo' column into Month and Species
   separate(col = combo, into = c("Month", "Species"), sep = "\\.") %>%
-  #Ensure chronological and 'Overall' order for Month factor
+  #E nsure chronological and 'Overall' order for Month factor
   mutate(Month = factor(Month, 
                         levels = c('Jun','Jul','Aug','Sep','Oct','Nov','Dec','Overall'),
                         ordered = TRUE))
@@ -751,7 +749,7 @@ Note: this chunk of code is VERY slow to run.
 ```{r Determining monthly and overall overlap in SIBER, cache=TRUE}
 
 set.seed(2564)
-#Define the ellipses:
+# Define the ellipses:
 
 ellipse1 = "Jun.Onki"
 ellipse2 = "Jun.Onmy"
@@ -878,7 +876,7 @@ get_density_peak <- function(x, na.rm = TRUE) {
   }
 # Create density estimate
   d <- density(x)
-# Return the 'x' value that has the highest 'y' value (the peak of ther distribution)
+# Return the 'x' value that has the highest 'y' value (the peak of their distribution)
   return(d$x[which.max(d$y)])
 }
 
@@ -904,7 +902,7 @@ final_overlap_stats <- results_table %>%
 # Export the clean data frame to your centralized output folder
 write.csv(final_overlap_stats, file.path(sia_dir, "SIBER", "SEAb_Posterior_Overlap_Stats.csv"), row.names = FALSE)
 
-# Generate the HTML table for the document
+# Generate the summary HTML table for the document
 final_overlap_stats %>%
   kbl(
     caption = "Summary statistics for the proportional niche overlap (SEAb, 95% CrI) between coho salmon and steelhead generated by SIBER.",
@@ -1249,7 +1247,7 @@ write.table(fish.size, file = file.path(sia_dir, "NicheROVER",
   boxplot(fish.size, col = clrs, pch = 16, cex = .5,
           ylab = "Niche Size", xlab = "Species")
   
-  dev.off() #Close the PDF
+  dev.off() #Close the .pdf
  
 # Prepare data for ggplot
 # Use the 'over.stat.plot' object from the previous step (alpha = .95, nprob = 1e3)
@@ -1276,13 +1274,12 @@ write.table(fish.size, file = file.path(sia_dir, "NicheROVER",
   all_plot_data_list[[period]] <- combined_df
   
 # Preparing ggplots
-  # Standardized title lookup
+  # Standardized title look-up
   plot_labels <- c("Jun"="(a) Jun", "Jul"="(b) Jul", "Aug"="(c) Aug", "Sep"="(d) Sep", 
                    "Oct"="(e) Oct", "Nov"="(f) Nov", "Dec"="(g) Dec", "Overall"="(h) Overall")
 
   #Base plot info
   p <- ggplot(data = combined_df, aes(x = Overlap, y = after_stat(scaled), fill = Species, color = Species)) +
-    # FIX: Added linewidth = 0.3 to thin the borders around the density distributions
     geom_density(alpha = 0.5, linewidth = 0.3) +
     scale_fill_manual(values = c("Onki" = "#D55E00", "Onmy" = "#0072B2")) +
     scale_color_manual(values = c("black", "black")) + #Black for contrast
@@ -1290,7 +1287,6 @@ write.table(fish.size, file = file.path(sia_dir, "NicheROVER",
     scale_y_continuous(limits = c(0, 1), breaks = c(0, 0.5, 1)) +
     labs(title = plot_labels[[period]]) + 
     theme_classic() +
-    # FIX: Updated size = 0.5 to linewidth = 0.3 to thin the dashed/solid vertical mean lines
     geom_vline(xintercept = mean(subset(combined_df, Species == "Onki")$Overlap), linetype = "dashed", linewidth = 0.3) +
     geom_vline(xintercept = mean(subset(combined_df, Species == "Onmy")$Overlap), linetype = "solid", linewidth = 0.3) +
     theme(
@@ -1415,7 +1411,7 @@ library(patchwork)
 
 if (length(plot_list) == length(periods)) {
   
-  #Arrange plots
+  # Arrange plots
   ordered_plots <- plot_list[c("Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Overall")]
   
   # Main 4 x 2 grid (just the stitched plots, no titles)
