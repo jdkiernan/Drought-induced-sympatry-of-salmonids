@@ -24,3 +24,6 @@ patchwork
 htmlwidgets
 webshot2
 magick
+remotes
+usethis
+devtools
