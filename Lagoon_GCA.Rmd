@@ -37,8 +37,11 @@ rm(list=ls()) #clear environment
 
 #IMPORTANT: The following two lines are suppressed here but are needed to install the 'FSAmisc' package. #See also: https://rdrr.io/github/droglenc/FSAmisc/man/dietOverlap.html for package information.
 
-#if (!require('devtools')) install.packages('devtools'); require('devtools')  #For 'FSAmisc' package.
-#devtools::install_github('droglenc/FSAmisc') 
+if (!require('remotes')) install.packages('remotes'); require('remotes')
+if (!require('devtools')) install.packages('devtools'); require('devtools')
+
+# Only install FSAmisc if it is not already installed
+if (!require('FSAmisc')) remotes::install_github('droglenc/FSAmisc') 
 
 library(FSAmisc)
 
@@ -135,7 +138,7 @@ IRI Workflow:
 
 2. Run DietR function to calculate IRI: (1) by species and month and (2) by species for the whole study (i.e., "Overall" - all sample periods [months] combined).
 
-3. Save IRI output - Supplemental Table *S3* in the mansuscript
+3. Save IRI output - Supplemental Table *S3* in the manuscript
 
 4. Create Figure 1 in the manuscript - IRI Output by species for each month of the study and overall
 
@@ -293,7 +296,7 @@ knitr::kable(final_table,
 
 
 ### Create table of "overall" IRI values, sorted from highest to lowest. 
-These data are used to check and verify the relative order that the prey categories are presented in Figure 1. They also contribute to Tablse S3 in the manuscript.
+These data are used to check and verify the relative order that the prey categories are presented in Figure 1. They also contribute to Table S3 in the manuscript.
 
 ```{r Sorted Overall IRI Table and Export}
 # Load the taxa groupings to grab the codes
@@ -408,7 +411,7 @@ sum.monthly <- coho %>%
             PercentMass.total = sum(PercentMass),
             PercentIRI.total = sum(PercentIRI))  #18 obs, 5 var.
 
-# Step 4.6 Join montly sums to coho data
+# Step 4.6 Join monthly sums to coho data
 coho3 <- coho2 %>% 
   left_join(., sum.monthly) #77 obs of 19 var.
 
@@ -1140,7 +1143,7 @@ analyze_diet <- function(data, subset_name, prey_indices) {
   spp_scrs$pval <- ef_res$vectors$pvals
   sig_spp_scrs <- subset(spp_scrs, pval <= 0.01)
   
-  # Format string for table (prey in alphebetized order)
+  # Format string for table (prey in alphabetized order)
   sorted_species <- sort(sig_spp_scrs$Species)
   sig_list_str <- paste(sorted_species, collapse = ", ")
   

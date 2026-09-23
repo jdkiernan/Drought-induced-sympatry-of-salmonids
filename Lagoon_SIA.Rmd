@@ -1,7 +1,7 @@
 ---
 title: "Explaining analyses conducted on Scott Creek Lagoon fish stable isotope data"
 subtitle: "Drought-induced sympatry of two salmonid species: Feeding ecology and trophic niches of potential competitors"
-authors: "Joseph D. Kiernan and Rosealea M. Bond"
+author: "Joseph D. Kiernan and Rosealea M. Bond"
 date: "`r Sys.Date()`"
 output:
   html_document:
@@ -12,6 +12,7 @@ output:
       smooth_scroll: true
     number_sections: true
     df_print: paged
+    self_contained: true
 ---
 
 ```{r initial setup, include=FALSE}
@@ -22,24 +23,85 @@ knitr::opts_chunk$set(echo = TRUE)
 
 This document explains the analyses performed on the stable isotope samples collected in support of the manuscript titled, "Drought-induced sympatry of two salmonid species: Feeding ecology and trophic niches of potential competitors". A separate R markdown file explains the analyses conducted on fish diet (stomach content) samples. Questions regarding these analyses or the R markdown should be directed to Dr. Joseph Kiernan at joseph.kiernan@noaa.gov.
 
-```{r Libraries, echo=FALSE, message=FALSE, warning=FALSE}
+### Important note on software prerequisites and dependencies
+To reproduce this analysis, you must install R, RStudio, and the **JAGS** software. 
+JAGS is an external dependency required for the Bayesian modeling in the `SIBER` package.
+Because JAGS is an external system-level software, R cannot install it automatically for the user.
 
-rm(list=ls()) #clear environment
+* Download JAGS here: [JAGS SourceForge](https://sourceforge.net/projects/mcmc-jags/files/JAGS/4.x/) 
 
-# Install and load the necessary packages
-library(ggplot2)
+The code was tested and verified using JAGS version 4.3.1 (MacOS) and 4.3.2 (Windows).
+
+
+```{r Load all libraries, echo=FALSE, message=FALSE, warning=FALSE}
+
+rm(list=ls()) # clear environment
+
+# Fallback path binding for Windows if system environment variable is unmapped
+if (.Platform$OS.type == "windows" && Sys.getenv("JAGS_HOME") == "") {
+  jags_paths <- c(
+    "C:/Program Files/JAGS/JAGS-4.3.2",
+    "C:/Program Files/JAGS/JAGS-4.3.1",
+    "C:/Program Files/JAGS/JAGS-4.3.0"
+  )
+  for (path in jags_paths) {
+    if (dir.exists(path)) {
+      Sys.setenv(JAGS_HOME = path)
+      break
+    }
+  }
+}
+
+# Check for JAGS System Dependency
+# SIBER requires the standalone JAGS software to run. 
+# This bit of code intercepts a system crash and provides instructions if JAGS is missing from the local machine
+jags_check <- tryCatch({
+  suppressPackageStartupMessages(library(rjags))
+  TRUE
+}, error = function(e) {
+  FALSE
+})
+
+if (!jags_check) {
+  stop(
+    "\n\n=======================================================================\n",
+    "FATAL ERROR: JAGS (Just Another Gibbs Sampler) is missing.\n\n",
+    "The 'SIBER' package requires the standalone JAGS system software to run.\n",
+    "1. Download and install JAGS for your OS (Windows/Mac/Linux) here:\n",
+    "   [https://sourceforge.net/projects/mcmc-jags/files/JAGS/4.x/](https://sourceforge.net/projects/mcmc-jags/files/JAGS/4.x/)\n",
+    "2. After installing JAGS, install the R package by running:\n",
+    "   install.packages('rjags')\n",
+    "3. Restart RStudio and knit the document again.\n",
+    "=======================================================================\n\n"
+  )
+}
+
+# Data manipulation
+# Note: plyr is loaded before tidyverse to prevent masking of dplyr functions
+library(plyr)
+library(tidyverse) # Automatically loads dplyr, tidyr, ggplot2, readr, and tibble
 library(reshape2)
-library(plyr); library(dplyr) #specific load order to avoid potential conflicts and problems
-library(tidyr)
-library(ggridges)
-library(tidyverse)
-library(ggpubr)
+
+# Statistical and isotope analysis
 library(rstatix)
-library(readr)    
+library(coin)
+library(SIBER)
+library(nicheROVER)
+
+# Plotting and visualization
+library(ggridges)
+library(ggpubr)
+library(ggeasy)
+library(patchwork)
+library(tidybayes)
+library(grid)
+
+# --- Tables and formatting ---
 library(knitr)
 library(kableExtra)
-library(coin)
 ```
+## Input data file 
+
 Data file: "Lagoon_fish_isotope.csv". 
 
 This data set includes only age-1+ (yearling) coho salmon and steelhead. Carbon stable isotope values (header "d13C_corr") are lipid corrected values; we mathematically lipid-corrected all fin clips with a C:N ratio > 3.5 (n = 77; 15.6% of the samples). Specifically, we followed the recommendation of Skinner et al. (2016) and applied the nonlinear normalization model developed by Kiljunen et al. (2006) with the Post et al. (2007) percentage lipid calculation. 
@@ -47,7 +109,7 @@ This data set includes only age-1+ (yearling) coho salmon and steelhead. Carbon 
 1. Percentage Lipid Calculation (Post et al. 2007) utilizes the linear relationship between C:N and lipid content ($L$) proposed for aquatic animals:
 $$L = -20.54 + (7.24 \times C:N)$$ 
 
-2. Nonlinear Normalization Model (Kiljunen et al. 2006) takes that $L$ value and applies the modified parameters ($D = 7.018$ and $I = 0.048$) to the McConnaughey and McRoy (1979) equation to calculate the isotopic shift: 
+2. Nonlinear Normalization Model (Kiljunen et al. 2006) takes that $L$ value and applies the modified parameters ($D = 7.018$ and $I = 0.048$) to the McConnaughey & McRoy (1979) equation to calculate the isotopic shift: 
 ($\Delta\delta^{13}C$):$$\Delta\delta^{13}C = 7.018 \times \left(0.048 + \frac{3.90}{1 + 287 / L}\right)$$
 
 3. Final Correction
@@ -63,7 +125,7 @@ if (!dir.exists(input_dir)) {
   dir.create(input_dir)
 }
 
-# Create results directory and analysis-specific sub-folders
+# Create Results Directory and Analysis Subfolders
 output_dirs <- c(
   sia_dir,
   file.path(sia_dir, "SIBER"),
@@ -84,19 +146,17 @@ if (!dir.exists(sia_dir)) {
 
 # Read the data using file.path() and the input directory
 data_full <- read.csv(file.path(input_dir, "Lagoon_fish_isotope.csv"))
-# Note the full data set contains additional fisheries metadata which do not contribute to the analysis
+# The full data set contains additional fisheries metadata which do not contribute to the analysis
 
 # To list months of the study chronologically rather than alphabetically.
 data_full$Month <- factor(data_full$Month, levels =c("Jun","Jul","Aug","Sep","Oct","Nov","Dec"), ordered = TRUE)
 
 data<-subset(data_full, select=c(Month, Species, Length_mm, d13C_corr, d15N)) #should be 494 observations of 5 variables
-
 # The reduced data set includes five variables of interest: (1) sample month; (2) fish species code; (3) fish fork length (mm); (4) fish d13C value; and (5) fish d15N value.
 ```
 
 ## Summarize stable isotope data
-Purpose: to summarize the stable isotope data for each salmonid species (Onki = coho salmon and Onmy = steelhead) by month. These summary metrics are presented, in part, in Table 4 of the manuscript.
-
+Purpose: to summarize the stable isotope data for each salmonid species (Onki = coho salmon and Onmy = steelhead) by month. These data are presented, in part, in Table 4 of the manuscript.
 ```{r Summarize stable isotope data}
 # Calculate summary metrics
 isotope.fish.summary<-ddply(data, c("Month", "Species"), summarise,
@@ -130,9 +190,6 @@ isotope.fish.summary %>%
 Here we test for significant differences between the monthly d13C and d15N values derived for coho salmon and steelhead. It was determined during data screening that 3 of the 18 isotope groups, due to small sample sizes, violated the assumptions necessary for applying parametric t-tests. Consequently, we conservatively use the non-parametric Wilcoxon Rank Sum test to contrast monthly differences and apply a Bonferroni correction to determine significant differences.
 
 ```{r Wilcoxon Rank Sum test contrasting isotope values}
-# Load required libraries
-library(rstatix)
-library(tidyverse) 
 
 # Define the correct chronological order for the months
 month_order <- c("Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
@@ -159,6 +216,7 @@ all_wilcox_eff <- data_long %>%
   rstatix::wilcox_effsize(value ~ Species)
 
 all_results <- all_wilcox_tests %>%
+  # Corrected join parameters here
   left_join(all_wilcox_eff, by = c("Month", "Isotope", ".y.", "group1", "group2", "n1", "n2")) %>%
   mutate(Period = as.character(Month))
 
@@ -172,6 +230,7 @@ overall_wilcox_eff <- data_long %>%
   rstatix::wilcox_effsize(value ~ Species)
 
 overall_results <- overall_wilcox_tests %>%
+  # Corrected join parameters here
   left_join(overall_wilcox_eff, by = c("Isotope", ".y.", "group1", "group2", "n1", "n2")) %>%
   mutate(Period = "Overall")
 
@@ -186,10 +245,10 @@ write_csv(full_results_df, file.path(sia_dir, "Tables", "Isotope_Wilcoxon_Result
 ```
 
 ### Summary table of results for Wilcoxon tests. 
-These results are presented in Supplemental Table S4 in the manuscript. Note: Effect sizes are typically interpreted as small (0.1 to < 0.3), moderate (0.3 to < 0.5), and large (>= 0.5).
+These results are presented in Supplemental Table S4 in the manuscript. Note: Effect sizes are typically interpreted as small (0.1 to < 0.3), moderate (0.3 to < 0.5), and large (> 0.5).
 
 ```{r Summarizing Wilcoxon test results, results='asis'}
-# This chunk uses the full_results_df created above
+# This chunk uses the full_results_df created in the previous chunk
 # Reshape data (Pivot wider)
 wide_results <- full_results_df %>%
   pivot_wider(
@@ -200,7 +259,7 @@ wide_results <- full_results_df %>%
   ) %>%
   dplyr::rename(Month = Period)
 
-# Reorder rows chronologically
+# Reorder rows (chronological)
 month_order <- c("Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Overall")
 wide_results <- wide_results %>%
   mutate(Month = factor(Month, levels = month_order)) %>%
@@ -248,12 +307,6 @@ wilcoxon_table_out
 ```{r Calculate and Format TA and SEAc Metrics (Monthly & Overall), echo=FALSE, message=FALSE, warning=FALSE}
 rm(list=ls())
 
-# Load libraries needed for this chunk
-library(SIBER)
-library(dplyr)
-library(tidyr)
-library(tibble)
-
 # Re-add directory paths after the environment wipe
 input_dir <- "Lagoon_SIA_Input_Data"
 sia_dir <- "Lagoon_SIA_Results"
@@ -280,7 +333,7 @@ siber.monthly.obj <- createSiberObject(siber.data)
 # Calculate Maximum Likelihood (ML) group metrics for each month
 group.ML.monthly <- groupMetricsML(siber.monthly.obj)
 
-# To generate "Overall" metrics, we create a copy of the data and assigned all records to a single "Overall" community.
+# To get "Overall" metrics, we create a copy of the data and assigned all records to a single "Overall" community.
 siber.overall.data <- siber.data
 siber.overall.data$community <- "Overall"
 
@@ -350,8 +403,6 @@ TA_SEAc_table_out
 These data are presented as Figure 2 in the manuscript. 
 
 ```{r Figure 2, Generate isotope biplot, fig.width=6.5, fig.height=3.97}
-library(grid) 
-library(patchwork)
 
 # Define labels
 plot_labels <- c("Jun"="(a) Jun", "Jul"="(b) Jul", "Aug"="(c) Aug", "Sep"="(d) Sep", 
@@ -423,7 +474,7 @@ final_plot_list <- map2(all_siber_plots, names(all_siber_plots), function(p, nam
   return(p)
 })
 
-# Main grid
+# Main Grid
 main_grid <- wrap_plots(final_plot_list, ncol = 4, nrow = 2) & 
   theme(text = element_text(family = "serif"))
 
@@ -443,8 +494,7 @@ final_siber_panel <- (wrap_elements(y_grob) + main_grid + plot_layout(widths = c
 final_siber_panel
 
 ggsave(file.path(sia_dir, "Figures", "Figure_2.pdf"), 
-       width = 6.5, height = 3.97, units = "in", dpi = 800, 
-       device = function(file, ...) quartz(file = file, type = "pdf", ...))
+       width = 6.5, height = 3.97, units = "in", dpi = 800)
 ggsave(file.path(sia_dir, "Figures", "Figure_2.tif"), 
        width = 6.5, height = 3.97, units = "in", dpi = 800, 
        device = "tiff", compression = "lzw")
@@ -453,9 +503,10 @@ ggsave(file.path(sia_dir, "Figures", "Figure_2.tif"),
 Figure 2. Caption:
 Stable isotope biplots (δ13C versus δ15N) for juvenile coho salmon (*Oncorhynchus kisutch*; Onki) and steelhead (*O. mykiss*; Onmy), captured in the Scott Creek lagoon during each month of the study (Jun–Dec, panels a–g respectively). Panel h shows composited data from all months of the study. Points are individual fish samples and filled ellipses are the standard ellipse areas (corrected for small sample size; SEAc). Standard ellipse areas encompass approximately 40% of the isotopic data and represent the core isotopic niche for each species. The larger ellipses contain approximately 95% of the isotopic data for each species.
 
+
 ## Calculating Bayesian Standard Ellipse Area (SEAb)
 
-The previous calculations yielded point estimates (i.e., a single value) of overlap based on the maximum likelihood estimated SEAc. To assess how reliable these data are, we need an associated measure of confidence/variance. This is achieved by calculating the Bayesian standard ellipse area (SEAb) and generating credible intervals.
+The previous calculations yielded point estimates (i.e., single value) of overlap based on the maximum likelihood estimated SEAc. To assess how reliable these data are, we need an associated measure of confidence/variance. This is achieved by calculating the Bayesian standard ellipse area (SEAb) and generating credible intervals.
 
 ```{r Calculate SEAb with uninformed priors, echo=TRUE, message=TRUE, warning=TRUE, cache=TRUE}
 
@@ -481,7 +532,7 @@ ellipses.posterior <- siberMVN(siber.monthly.obj, parms, priors)
 SEA.B <- siberEllipses(ellipses.posterior)
 ```
 
-Here is a preliminary look at the distribution of ellipses for each population as a SIBER density plot. The gradations denote 95, 75 and 50% credible intervals. This plot does not include the overall (study-wide) pooled estimate which is generated later in the script. This plot, in part, will be recreated later using ggplot to produce Figure 3 that appears in the manuscript.
+Here is a preliminary look at the distribution of ellipses for each population as a SIBER density plot. The gradations denote 95, 75 and 50% credible intervals. This plot does not include the overall (study-wide) pooled estimate which is generated later. This plot, in part, will be recreated later using ggplot to produce Figure 3 in the manuscript.
 
 ```{r Creating standard SIBER density plot, echo=TRUE, message=TRUE, warning=TRUE, cache=TRUE}
 # Save current settings
@@ -513,7 +564,7 @@ siberDensityPlot(
 # Restore original settings
 par(op)
 
-# The following line (currently suppresed) can be used to add red x's for the ML estimated SEAc, if desired
+# The following line will add red x's for the ML estimated SEAc, if desired
 #points(1:ncol(SEA.B), group.ML.monthly[3,], col="red", pch = "x", lwd = 2)
 ```
 
@@ -556,7 +607,7 @@ write.table(SEA.B.credibles, file = file.path(sia_dir, "SIBER", "SEAb_Credible_I
             append = F, sep = ',', row.names = T, col.names = NA)
 ```
 
-Although SIBER has a built-in SEAb plot (Siber.density.plot, created above), we will prepare the SIBER output for ggplot which is far easier to customize and manipulate.
+Although SIBER has a built-in SEAb plot (Siber.density.plot, created above), we will prepare the SIBER output for ggplot which is easier to customize and manipulate.
 
 ```{r Draw SEA.B posteriors, echo=TRUE, message=TRUE, warning=TRUE, cache=TRUE}
 
@@ -578,7 +629,7 @@ Note: the warning "No id variables; using all as measure variables" is the preci
 
 Next we re-run the analysis for to generate the "overall" (all monthly data combined) estimates for each salmonid spp.
 
-```{r Generate "Overall" SIBER model, echo=TRUE, message=TRUE, warning=TRUE, cache=TRUE}
+```{r Generate Overall SIBER model, echo=TRUE, message=TRUE, warning=TRUE, cache=TRUE}
 
 #"Overall" SIBER model, default settings, uninformed priors
 
@@ -633,7 +684,7 @@ SEA.B.3$Month <- factor(SEA.B.3$Month, levels = c('Jun','Jul','Aug','Sep','Oct',
 ```
 Again, "No id variables; using all as measure variables" is the precise structure we want for the data.
 
-```{r Creating the "Overall" SIBER density plot, echo=TRUE, message=TRUE, warning=TRUE, cache=TRUE}
+```{r Creating the Overall SIBER density plot, echo=TRUE, message=TRUE, warning=TRUE, cache=TRUE}
 
 siberDensityPlot(
                SEA.B.overall, 
@@ -648,12 +699,12 @@ siberDensityPlot(
                  main = ""
                  )
 
-# The following line (currently suppresed) can be used to add red x's for the ML estimated SEAc, if desired
+#The following line of code (currently suppressed) will add red x's for the ML estimated SEAc if desired
 #points(1:ncol(SEA.B), group.ML.overall[3,], col="red", pch = "x", lwd = 2)
 ```
 
 
-```{r Examining the "Overall" SEA.B credible intervals}
+```{r Examining the Overall SEA.B credible intervals}
 # Examining the SEA.B credible intervals 
 cr.p <- c(0.50, 0.75, 0.95) # vector of quantiles
 
@@ -661,14 +712,14 @@ cr.p <- c(0.50, 0.75, 0.95) # vector of quantiles
 SEA.B.overall.modes <- lapply(
   as.data.frame(SEA.B.overall), 
   function(x,...){tmp <- hdrcde::hdr(x)$mode},
-  prob = cr.p, all.modes = T) # vectors of the modes for each group's SEA.b
+  prob = cr.p, all.modes = T) #vectors of the modes for each group's SEA.b
 #SEA.B.overall.modes
 
 # Call to hdrcde:hdr using lapply()
 SEA.B.overall.credibles <- lapply(
   as.data.frame(SEA.B.overall), 
   function(x,...){tmp <- hdrcde::hdr(x)$hdr},
-  prob = cr.p) # vectors of the credible intervals for each group's SEA.b
+  prob = cr.p) #vectors of the credible intervals for each group's SEA.b
 #SEA.B.overall.credibles
 
 # Save this output to the SIBER_Output directory
@@ -697,13 +748,13 @@ full_col_names <- c('Jun.Onki', 'Jun.Onmy',
                     'Overall.Onki', 'Overall.Onmy')
 colnames(SEA.B.full) <- full_col_names
 
-# Melt the data for ggplot (creating SEA.B.3)
+#Melt the data for ggplot (creating SEA.B.3)
 SEA.B.3 <- as.data.frame(SEA.B.full) %>% 
-  # Melt the wide data into long format
+  #Melt the wide data into long format
   melt(variable.name = "combo", value.name = "value") %>%
-  # Split the 'combo' column into Month and Species
+  #Split the 'combo' column into Month and Species
   separate(col = combo, into = c("Month", "Species"), sep = "\\.") %>%
-  #E nsure chronological and 'Overall' order for Month factor
+  #Ensure chronological and 'Overall' order for Month factor
   mutate(Month = factor(Month, 
                         levels = c('Jun','Jul','Aug','Sep','Oct','Nov','Dec','Overall'),
                         ordered = TRUE))
@@ -749,7 +800,7 @@ Note: this chunk of code is VERY slow to run.
 ```{r Determining monthly and overall overlap in SIBER, cache=TRUE}
 
 set.seed(2564)
-# Define the ellipses:
+#Define the ellipses:
 
 ellipse1 = "Jun.Onki"
 ellipse2 = "Jun.Onmy"
@@ -893,8 +944,6 @@ results_table <- data.frame(
 # Set the row names to be the column names (Months and Overall)
 rownames(results_table) <- names(df)
 
-library(tibble) #for rownames_to_column
-
 # Convert row names to a column and store it as a clean data frame
 final_overlap_stats <- results_table %>%
   rownames_to_column(var = "Month")
@@ -902,7 +951,7 @@ final_overlap_stats <- results_table %>%
 # Export the clean data frame to your centralized output folder
 write.csv(final_overlap_stats, file.path(sia_dir, "SIBER", "SEAb_Posterior_Overlap_Stats.csv"), row.names = FALSE)
 
-# Generate the summary HTML table for the document
+# Generate the HTML table for the document
 final_overlap_stats %>%
   kbl(
     caption = "Summary statistics for the proportional niche overlap (SEAb, 95% CrI) between coho salmon and steelhead generated by SIBER.",
@@ -918,11 +967,6 @@ final_overlap_stats %>%
 Here we make an alternative figure to the SIBER DENSITY PLOT that illustrates the mean SEAb value and credible intervals for each posterior distribution.
 
 ```{r Figure 3, echo=TRUE, message=FALSE, warning=FALSE}
-
-library(patchwork)
-library(grid)
-library(tidybayes)
-library(dplyr) 
 
 # Pre-calculate the credible intervals
 ci_95 <- SEA.B.3 %>% group_by(Month, Species) %>% mean_qi(value, .width = 0.95)
@@ -994,8 +1038,7 @@ Diet.breadth.plot <- (wrap_elements(y_grob) + main_grid + plot_layout(widths = c
 Diet.breadth.plot
 
 ggsave(file.path(sia_dir, "Figures", "Figure_3.pdf"), 
-       width = 6.5, height = 3.97, units = "in", dpi = 800, 
-       device = function(file, ...) quartz(file = file, type = "pdf", ...))
+       width = 6.5, height = 3.97, units = "in", dpi = 800)
 ggsave(file.path(sia_dir, "Figures", "Figure_3.tif"), 
        width = 6.5, height = 3.97, units = "in", dpi = 800, 
        device = "tiff", compression = "lzw")
@@ -1006,10 +1049,6 @@ Estimates of dietary niche breadth (‰^2) for juvenile coho salmon (*Oncorhynch
 ### Generate table of SEAb Posterior Distribution Central Tendencies and Credible Intervals for Figure 3 data validation.
 
 ```{r, quick QC for data validation}
-library(dplyr)
-library(tidyr)
-library(knitr)
-library(kableExtra)
 
 # Re-use the density peak function from earlier in the script to calculate the Mode
 get_density_peak <- function(x) {
@@ -1060,19 +1099,12 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
 This next section uses the R package “nicheROVER” to estimate dietary niche overlap between lagoon-rearing coho salmon and steelhead during each month of the study (Jun-Dec, 2015). We will run the model separately for each time period (month), and perform one run on all data pooled to create an "overall" estimate. 
 
-```{r Global nicheRover libraries and parameters}
+```{r Global nicheRover parameters}
 
 # Clean environment and set seed
 rm(list=ls())
 graphics.off()
 set.seed(2112)
-
-# Load required libraries
-library(nicheROVER)
-library(ggplot2)
-library(ggeasy) 
-library(patchwork)  
-library(kableExtra) 
 
 # Re-add directory paths after the environment wipe
 input_dir <- "Lagoon_SIA_Input_Data"
@@ -1247,7 +1279,7 @@ write.table(fish.size, file = file.path(sia_dir, "NicheROVER",
   boxplot(fish.size, col = clrs, pch = 16, cex = .5,
           ylab = "Niche Size", xlab = "Species")
   
-  dev.off() #Close the .pdf
+  dev.off() #Close the PDF
  
 # Prepare data for ggplot
 # Use the 'over.stat.plot' object from the previous step (alpha = .95, nprob = 1e3)
@@ -1274,12 +1306,13 @@ write.table(fish.size, file = file.path(sia_dir, "NicheROVER",
   all_plot_data_list[[period]] <- combined_df
   
 # Preparing ggplots
-  # Standardized title look-up
+  # Standardized title lookup
   plot_labels <- c("Jun"="(a) Jun", "Jul"="(b) Jul", "Aug"="(c) Aug", "Sep"="(d) Sep", 
                    "Oct"="(e) Oct", "Nov"="(f) Nov", "Dec"="(g) Dec", "Overall"="(h) Overall")
 
   #Base plot info
   p <- ggplot(data = combined_df, aes(x = Overlap, y = after_stat(scaled), fill = Species, color = Species)) +
+    # FIX: Added linewidth = 0.3 to thin the borders around the density distributions
     geom_density(alpha = 0.5, linewidth = 0.3) +
     scale_fill_manual(values = c("Onki" = "#D55E00", "Onmy" = "#0072B2")) +
     scale_color_manual(values = c("black", "black")) + #Black for contrast
@@ -1287,6 +1320,7 @@ write.table(fish.size, file = file.path(sia_dir, "NicheROVER",
     scale_y_continuous(limits = c(0, 1), breaks = c(0, 0.5, 1)) +
     labs(title = plot_labels[[period]]) + 
     theme_classic() +
+    # FIX: Updated size = 0.5 to linewidth = 0.3 to thin the dashed/solid vertical mean lines
     geom_vline(xintercept = mean(subset(combined_df, Species == "Onki")$Overlap), linetype = "dashed", linewidth = 0.3) +
     geom_vline(xintercept = mean(subset(combined_df, Species == "Onmy")$Overlap), linetype = "solid", linewidth = 0.3) +
     theme(
@@ -1406,12 +1440,10 @@ kbl(summary_table_formatted,
 ### Creating Figure 4, Probability of isotopic niche overlap
 
 ```{r Create Figure 4, fig.width=6.5, fig.height=3.97, echo=FALSE}
-library(grid)
-library(patchwork)
 
 if (length(plot_list) == length(periods)) {
   
-  # Arrange plots
+  #Arrange plots
   ordered_plots <- plot_list[c("Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Overall")]
   
   # Main 4 x 2 grid (just the stitched plots, no titles)
@@ -1441,8 +1473,7 @@ if (length(plot_list) == length(periods)) {
 
 # Output
 ggsave(file.path(sia_dir, "Figures", "Figure_4.pdf"), 
-       width = 6.5, height = 3.97, units = "in", dpi = 800, 
-       device = function(file, ...) quartz(file = file, type = "pdf", ...))
+       width = 6.5, height = 3.97, units = "in", dpi = 800)
 ggsave(file.path(sia_dir, "Figures", "Figure_4.tif"), 
        width = 6.5, height = 3.97, units = "in", 
        dpi = 800, device = "tiff", compression = "lzw")
